@@ -1,0 +1,493 @@
+{
+  "meta": {
+    "domain": "AP invoice automation",
+    "agent_name": "EBS AP Invoice Automation Agent",
+    "package": "ebs_ap_paf",
+    "kicker": "PRIVATE AGENT FACTORY \u00b7 ORACLE E-BUSINESS SUITE",
+    "headline": "AP Invoice Automation Agent",
+    "subhead": "Invoice-to-Match for EBS \u2014 extract, 3-way match, and code supplier invoices straight into the Payables Open Interface, validated against your live EBS data.",
+    "title_stats": [
+      {
+        "big": "$2\u20133",
+        "label": "cost / invoice, automated"
+      },
+      {
+        "big": "~$930K",
+        "label": "annual value (50K invoices)"
+      },
+      {
+        "big": "100%",
+        "label": "audit trail preserved"
+      }
+    ]
+  },
+  "problem": {
+    "title": "Manual AP is slow, costly, and error-prone",
+    "cards": [
+      {
+        "icon": "file",
+        "big": "$12\u201315",
+        "desc": "fully-loaded cost to process one invoice by hand"
+      },
+      {
+        "icon": "gauge",
+        "big": "8\u201310 days",
+        "desc": "typical cycle time \u2014 late payments, missed discounts"
+      },
+      {
+        "icon": "magnify",
+        "big": "1\u20133%",
+        "desc": "of spend lost to duplicate and over-billed invoices"
+      }
+    ],
+    "note": "AP automation is a $3B+ category with multiple unicorns. Every EBS shop runs tens of thousands to millions of invoices a year \u2014 and pays incumbents $3\u20138 each."
+  },
+  "solution": {
+    "title": "An EBS-native agent that does the AP grunt work",
+    "cards": [
+      {
+        "icon": "robot",
+        "title": "Reads any invoice",
+        "desc": "PDF, email or text \u2014 a deterministic parser (zero external deps) with an optional LLM for messy/scanned docs."
+      },
+      {
+        "icon": "database",
+        "title": "Checks live EBS",
+        "desc": "Supplier, PO, receipts, tax and GL \u2014 read-only, org-scoped lookups against the real E-Business Suite."
+      },
+      {
+        "icon": "scale",
+        "title": "Matches & codes",
+        "desc": "Deterministic 3-way match with price/qty tolerances, GL distribution inheritance and tax classification."
+      },
+      {
+        "icon": "check",
+        "title": "Validates & delivers",
+        "desc": "A QA gate proves every invoice balances before it writes balanced AP Open Interface files."
+      }
+    ],
+    "note": "Same agentic pattern as Oracle's Private Agent Factory contract-renewal blog \u2014 pointed at the far larger AP revenue pool."
+  },
+  "architecture": {
+    "title": "EBS 19c owns the data + logic; PAF + managed MCP do the rest",
+    "subhead": "Agentic AP automation on OCI \u00b7 EBS 19c system of record \u00b7 managed MCP",
+    "tiers": [
+      {
+        "title": "PAF \u2014 Agent Builder",
+        "subtitle": "on ADB 26ai sidecar",
+        "accent": "navy",
+        "items": [
+          "LLM extract \u2192 tool calls",
+          "Condition (QA) \u2192 output",
+          "NO EBS DATA \u00b7 not in the data path"
+        ]
+      },
+      {
+        "title": "OCI Database Tools \u2014 Managed MCP",
+        "subtitle": "HTTPS \u00b7 OAuth / IAM \u00b7 audited",
+        "accent": "cyan",
+        "items": [
+          "custom tool: match_code_and_validate",
+          "SQL Reports (governed reads)",
+          "Database Tools Connection \u00b7 private endpoint"
+        ]
+      },
+      {
+        "title": "EBS 19c (OCI DBaaS)",
+        "subtitle": "System of record \u00b7 NNE",
+        "accent": "navy",
+        "items": [
+          "XXPAF PL/SQL (all logic)",
+          "3-way match \u00b7 coding \u00b7 QA",
+          "AP_*_INTERFACE \u2192 Open Interface Import"
+        ]
+      }
+    ],
+    "flow": "document \u2192 PAF LLM extract \u2192 match_code_and_validate (XXPAF) \u2192 balanced AP interface rows \u2192 Payables Open Interface Import",
+    "flow_note": "Read/validate via MCP \u00b7 writes loaded by the standard import \u00b7 deterministic logic + QA in EBS"
+  },
+  "controls": {
+    "title": "Built for auditors, not just speed",
+    "cards": [
+      {
+        "icon": "lock",
+        "title": "Read-only by design",
+        "desc": "Only SELECTs against EBS; the single write path is off by default and touches interface tables only."
+      },
+      {
+        "icon": "shield",
+        "title": "Multi-org safe",
+        "desc": "Org-scoped queries + FND_GLOBAL.APPS_INITIALIZE context; bind variables everywhere \u2014 no injection surface."
+      },
+      {
+        "icon": "scale",
+        "title": "Deterministic policy",
+        "desc": "Match, tolerance and coding rules live outside the LLM \u2014 reproducible and explainable for SOX."
+      },
+      {
+        "icon": "check",
+        "title": "QA gate before load",
+        "desc": "Every invoice is checked to balance, reconcile and resolve all FKs; failures are held, never imported."
+      }
+    ],
+    "note": "Every interface row is stamped with the agent run-id and a confidence score \u2014 traceable end to end."
+  },
+  "proof": {
+    "kicker": "PROVEN ON LIVE EBS VISION DATA",
+    "title": "Real invoice. Real PO. Clean match.",
+    "scenario_title": "Purchase Order 3495",
+    "scenario_sub": "Advanced Network Devices \u00b7 Org 204 \u00b7 Oracle EBS 19c Vision",
+    "rows": [
+      {
+        "a": "4 lines",
+        "b": "monitors, RAM, hard drives"
+      },
+      {
+        "a": "500 / 500",
+        "b": "invoiced vs received on every line"
+      },
+      {
+        "a": "01-520-7530-0000-000",
+        "b": "GL distribution inherited from the PO"
+      },
+      {
+        "a": "$632,500.00",
+        "b": "invoice total \u2014 header balances to lines"
+      }
+    ],
+    "status": "PASS",
+    "status_note": "All 4 lines auto-approved \u00b7 0 errors \u00b7 loadable",
+    "caption": "Verified against the live database during the build \u2014 not a mock."
+  },
+  "why_us": {
+    "title": "The partner to put this into production",
+    "cards": [
+      {
+        "icon": "database",
+        "title": "Deep EBS expertise",
+        "desc": "Decades running Oracle E-Business Suite for enterprise customers \u2014 we know your AP, PO and GL setup."
+      },
+      {
+        "icon": "bolt",
+        "title": "Reference build in hand",
+        "desc": "A working, QA'd agent proven against live Vision data \u2014 not slideware. Ready to point at your instance."
+      },
+      {
+        "icon": "handshake",
+        "title": "OCI + PAF aligned",
+        "desc": "Positioned for the Private Agent Factory motion on AI Database 26ai, with TCO and licensing mapped."
+      }
+    ]
+  },
+  "next_steps": {
+    "title": "Let's run it on your EBS instance",
+    "steps": [
+      {
+        "title": "Discovery",
+        "desc": "Confirm AP volumes, invoice mix and target operating unit."
+      },
+      {
+        "title": "Proof of value",
+        "desc": "Point the agent at a read-only EBS copy; demo a live 3-way match."
+      },
+      {
+        "title": "Productionize",
+        "desc": "Deploy on PAF / 26ai with AME approvals and scheduled import."
+      }
+    ]
+  },
+  "pricing": {
+    "rate_card": {
+      "onshore": 175,
+      "nearshore": 85,
+      "offshore": 65
+    },
+    "delivery_mix": {
+      "onshore": 0.2,
+      "nearshore": 0.4,
+      "offshore": 0.4
+    },
+    "implementation_hours": 320,
+    "run_hours_per_month": 40,
+    "agent_license_per_year": 35000,
+    "term_discount_pct": {
+      "12": 0,
+      "24": 10,
+      "36": 20
+    },
+    "oci_run_monthly": {
+      "small": 570,
+      "medium": 2240,
+      "large": 10040
+    },
+    "roi": {
+      "txns_per_year": 50000,
+      "manual_cost_per_txn": 12.0,
+      "automated_cost_per_txn": 2.5,
+      "early_pay_capture": 225000,
+      "duplicate_prevention": 150000,
+      "audit_savings": 80000
+    }
+  },
+  "roi_slide": {
+    "title": "~$930K of annual value at 50K invoices/yr",
+    "bars": [
+      {
+        "label": "Processing\ncost",
+        "value_k": 475
+      },
+      {
+        "label": "Early-pay\ndiscounts",
+        "value_k": 225
+      },
+      {
+        "label": "Duplicate\nprevention",
+        "value_k": 150
+      },
+      {
+        "label": "Audit /\ncompliance",
+        "value_k": 80
+      }
+    ],
+    "callout": {
+      "label": "Agent list price",
+      "big": "$25K\u2013$50K",
+      "sub": "per year, priced per invoice",
+      "multiple": "20\u201340\u00d7",
+      "multiple_note": "return on the agent fee \u2014 with margin to share with partners."
+    }
+  },
+  "bom": [
+    {
+      "component": "Autonomous AI Database 26ai (ADB, ECPU)",
+      "pricing": "License Included or BYOL (~76% lower)",
+      "notes": "PAF sidecar host"
+    },
+    {
+      "component": "Oracle Private Agent Factory",
+      "pricing": "$0",
+      "notes": "included with AI Database 26ai"
+    },
+    {
+      "component": "OCI Database Tools / Managed MCP",
+      "pricing": "consumption (confirm at install)",
+      "notes": "replaces self-hosted broker"
+    },
+    {
+      "component": "OCI Generative AI",
+      "pricing": "per-token",
+      "notes": "model-dependent (extraction)"
+    },
+    {
+      "component": "OCI Document Understanding (OCR)",
+      "pricing": "per-page (optional)",
+      "notes": "only if PDF/scan ingestion"
+    },
+    {
+      "component": "Compute / storage / networking",
+      "pricing": "consumption",
+      "notes": "no broker VM; no Instant Client host"
+    },
+    {
+      "component": "EBS 19c (OCI DBaaS/Exadata)",
+      "pricing": "customer existing license",
+      "notes": "system of record + XXPAF logic"
+    }
+  ],
+  "estimator": {
+    "tiers": [
+      {
+        "name": "Small \u2014 single BU",
+        "volume": 5000,
+        "oci_li": 6800,
+        "oci_byol": 2150,
+        "ms12": 6957,
+        "ms24": 6261,
+        "ms36": 5566
+      },
+      {
+        "name": "Medium \u2014 multi-BU",
+        "volume": 50000,
+        "oci_li": 26900,
+        "oci_byol": 8300,
+        "ms12": 8957,
+        "ms24": 8061,
+        "ms36": 7165
+      },
+      {
+        "name": "Large \u2014 F500 multi-org",
+        "volume": 500000,
+        "oci_li": 120500,
+        "oci_byol": 45000,
+        "ms12": 21000,
+        "ms24": 18900,
+        "ms36": 16800
+      }
+    ],
+    "note": "Managed services = run hours \u00d7 blended rate + OCI run + agent license; 12/24/36-mo at 0/10/20% discount. OCI = list, License Included; BYOL ~76% lower on the DB."
+  },
+  "tech_design": {
+    "intro": "EBS 19c (OCI DBaaS/Exadata) is the system of record and the home of all logic \u2014 the XXPAF_AP_AGENT PL/SQL package. PAF runs on an ADB 26ai sidecar holding zero EBS data and is not in the data path. The OCI Database Tools Managed MCP (HTTPS + OAuth/IAM) exposes XXPAF as a governed custom tool + SQL Reports over a Database Tools Connection \u2014 no broker, no DB link, no thick-mode in production.",
+    "processing": [
+      "Extraction in the PAF LLM node \u2192 invoice JSON",
+      "match_code_and_validate (XXPAF): supplier resolve, duplicate check, 3-way match (dual %/$ tolerance), GL/tax coding, QA gate",
+      "Balanced AP interface rows (header = \u03a3 lines incl. TAX line)",
+      "Load via the standard Payables Open Interface Import (writes off the MCP path)"
+    ],
+    "interface_contract": [
+      [
+        "Header table",
+        "AP_INVOICES_INTERFACE"
+      ],
+      [
+        "Lines table",
+        "AP_INVOICE_LINES_INTERFACE"
+      ],
+      [
+        "Import program",
+        "Payables Open Interface Import"
+      ],
+      [
+        "Tolerances",
+        "price 2% & $25 \u00b7 qty 5% & $25 (dual gate)"
+      ]
+    ],
+    "assurance": "Deterministic logic in PL/SQL; the Python reference engine is the test oracle (parity test asserts Python == PL/SQL on golden PO 3495 \u2192 balanced $632,500.00, QA PASS)."
+  },
+  "install": {
+    "prereqs": [
+      "Python 3.10+ (reference engine / dev & test)",
+      "Oracle Instant Client (thick mode, NNE) for dev/test only",
+      "Access to the target EBS 19c (OCI DBaaS/Exadata)",
+      "For production: OCI Database Tools + Managed MCP enabled (no local client needed)"
+    ],
+    "steps": [
+      {
+        "title": "Install (dev/test)",
+        "body": "Outputs land in output/: the interface CSVs, agent_trace.json and qa_report.json.",
+        "code": [
+          "./setup.sh && source .venv/bin/activate",
+          "ebs-ap-paf sample_data/invoice.txt --backend mock"
+        ]
+      },
+      {
+        "title": "Deploy the EBS logic",
+        "body": "Compile the XXPAF package into EBS 19c (system of record + logic).",
+        "code": [
+          "@db/xxpaf_install.sql   -- schema + least-privilege grants",
+          "@db/xxpaf_pkg.sql       -- XXPAF_AP_AGENT package"
+        ]
+      },
+      {
+        "title": "Import the agent + wire PAF (production)",
+        "body": "Import the .paf (PAF \u2192 My Custom Flows \u2192 Import; password simple4u), register the OCI managed MCP, rebind the MCP node + LLM, then run the validation gate.",
+        "code": [
+          "python core/scripts/paf_packager.py pack --in flow.json --flowgraph --name \"<Agent>\""
+        ]
+      }
+    ]
+  },
+  "sow": {
+    "overview": "Syntax will implement the EBS AP Invoice Automation Agent on Oracle Private Agent Factory, integrating to the customer's EBS 19c via the OCI Database Tools Managed MCP, with deterministic 3-way match, GL/tax coding, QA, and load through the standard Payables Open Interface Import.",
+    "deliverables": [
+      "XXPAF PL/SQL package deployed to EBS 19c",
+      "PAF agent (.paf import + canvas) + managed-MCP tool registration",
+      "QA pack (tests + QA_REPORT) and technical design document",
+      "Go-live support and knowledge transfer"
+    ],
+    "raci": [
+      [
+        "Activity",
+        "Syntax",
+        "Customer"
+      ],
+      [
+        "EBS access / Database Tools Connection",
+        "C",
+        "R"
+      ],
+      [
+        "XXPAF deployment",
+        "R",
+        "A"
+      ],
+      [
+        "PAF agent build + import",
+        "R",
+        "C"
+      ],
+      [
+        "UAT & acceptance",
+        "C",
+        "R"
+      ]
+    ],
+    "timeline_weeks": 8,
+    "acceptance": "a green live golden test plus a balanced interface load in customer UAT",
+    "legal_note": "This generic SOW shell is subject to the parties' MSA; have counsel review before use."
+  },
+  "org_id": 204,
+  "source": [
+    {
+      "name": "get_supplier",
+      "tables": [
+        "ap_suppliers",
+        "ap_supplier_sites_all",
+        "ap_terms"
+      ]
+    },
+    {
+      "name": "get_purchase_order",
+      "tables": [
+        "po_headers_all",
+        "po_lines_all",
+        "po_line_locations_all",
+        "po_distributions_all",
+        "gl_code_combinations_kfv",
+        "mtl_system_items_b"
+      ]
+    },
+    {
+      "name": "get_receipts",
+      "tables": [
+        "rcv_transactions"
+      ]
+    },
+    {
+      "name": "get_tax_code",
+      "tables": [
+        "zx_rates_b"
+      ]
+    },
+    {
+      "name": "check_duplicate_invoice",
+      "tables": [
+        "ap_invoices_all"
+      ]
+    }
+  ],
+  "target_interface": {
+    "header_table": "AP_INVOICES_INTERFACE",
+    "lines_table": "AP_INVOICE_LINES_INTERFACE",
+    "import_program": "Payables Open Interface Import",
+    "write_via": "standard_import"
+  },
+  "policy": {
+    "type": "three_way_match",
+    "tolerances": {
+      "price_pct": 2,
+      "qty_pct": 5,
+      "dollar_floor": 25
+    }
+  },
+  "golden_record": {
+    "key": "PO 3495",
+    "notes": "vendor 21 Advanced Network Devices, 4 lines, fully received, $632,500.00"
+  },
+  "paf": {
+    "mcp": "oci_managed",
+    "llm_model": "xai.grok-4",
+    "plsql_schema": "XXPAF",
+    "import_password": "simple4u"
+  }
+}

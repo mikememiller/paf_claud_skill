@@ -1,0 +1,75 @@
+{
+  "rate_card": {
+    "onshore": 175,
+    "nearshore": 85,
+    "offshore": 65
+  },
+  "delivery_mix": {
+    "onshore": 0.2,
+    "nearshore": 0.4,
+    "offshore": 0.4
+  },
+  "blended_rate": 95.0,
+  "implementation_fee": 30400.0,
+  "managed_services": {
+    "small": {
+      "12_month": {
+        "monthly": 7286.67,
+        "total_contract": 87440.04,
+        "discount_pct": 0
+      },
+      "24_month": {
+        "monthly": 6558.0,
+        "total_contract": 157392.0,
+        "discount_pct": 10
+      },
+      "36_month": {
+        "monthly": 5829.33,
+        "total_contract": 209855.88,
+        "discount_pct": 20
+      }
+    },
+    "medium": {
+      "12_month": {
+        "monthly": 8956.67,
+        "total_contract": 107480.04,
+        "discount_pct": 0
+      },
+      "24_month": {
+        "monthly": 8061.0,
+        "total_contract": 193464.0,
+        "discount_pct": 10
+      },
+      "36_month": {
+        "monthly": 7165.33,
+        "total_contract": 257951.88,
+        "discount_pct": 20
+      }
+    },
+    "large": {
+      "12_month": {
+        "monthly": 16756.67,
+        "total_contract": 201080.04,
+        "discount_pct": 0
+      },
+      "24_month": {
+        "monthly": 15081.0,
+        "total_contract": 361944.0,
+        "discount_pct": 10
+      },
+      "36_month": {
+        "monthly": 13405.33,
+        "total_contract": 482591.88,
+        "discount_pct": 20
+      }
+    }
+  },
+  "roi": {
+    "gross_annual_value": 930000.0,
+    "processing_savings": 475000.0,
+    "managed_services_year": 107480.04,
+    "net_annual_savings": 822519.96,
+    "payback_months": 1.4,
+    "three_year_net": 2467559.88
+  }
+}
