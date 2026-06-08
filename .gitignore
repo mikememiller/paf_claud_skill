@@ -1,0 +1,27 @@
+# Syntax Corporation © 2026 — EBS PAF Agent skill
+# caches / build
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
+dist/
+build/
+*.egg-info/
+.DS_Store
+
+# secrets / local config — NEVER commit
+.env
+*.env
+conn.json
+*.pem
+*.key
+*wallet*
+cwallet*
+
+# transient agent-build outputs
+ebsvision_tools.json
+*.paf

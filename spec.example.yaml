@@ -1,0 +1,64 @@
+# =============================================================================
+#  Syntax Corporation (c) 2026 — EBS PAF Agent skill
+#  spec.yaml — the per-agent input. Copy + fill per engagement (Phase 0).
+#  Everything not in here is invariant and comes from templates/ + references/.
+# =============================================================================
+domain: "AP invoice automation"          # human name + sales narrative anchor
+package: ebs_ap_paf                       # python package / repo name (snake_case)
+org_id: 204
+
+# --- EBS source reads (repository methods); confirm tables LIVE in Phase 1 ----
+source:
+  - name: get_supplier
+    tables: [ap_suppliers, ap_supplier_sites_all, ap_terms]
+  - name: get_purchase_order
+    tables: [po_headers_all, po_lines_all, po_line_locations_all, po_distributions_all, gl_code_combinations_kfv, mtl_system_items_b]
+  - name: get_receipts
+    tables: [rcv_transactions]
+  - name: get_tax_code
+    tables: [zx_rates_b]
+  - name: check_duplicate_invoice
+    tables: [ap_invoices_all]
+
+# --- target EBS Open Interface ------------------------------------------------
+target_interface:
+  header_table: AP_INVOICES_INTERFACE
+  lines_table:  AP_INVOICE_LINES_INTERFACE
+  import_program: "Payables Open Interface Import"
+  write_via: standard_import          # standard_import | mcp_dml_tool (verify at install)
+
+extraction_schema: invoice            # the fields the LLM/parser must produce
+policy:
+  type: three_way_match               # three_way_match | renewal_template | pricing_credit | close_checklist | element_validation
+  tolerances: { price_pct: 2, qty_pct: 5, dollar_floor: 25 }
+
+golden_record:
+  key: "PO 3495"
+  notes: "vendor 21 Advanced Network Devices, 4 lines, fully received, $632,500.00"
+
+# --- PAF / MCP integration ----------------------------------------------------
+paf:
+  mcp: oci_managed                    # oci_managed (default) | self_hosted_sse | ords_openapi
+  llm_model: "xai.grok-4"             # tool-capable model (OCI GenAI / OpenAI gpt-4o)
+  plsql_schema: XXPAF                  # custom EBS schema for the logic package
+
+# --- commercials (feed SOW + deck + ROI; see pricing-and-bom.md) --------------
+branding: { audience: exec, footer: "Syntax Corporation © 2026" }
+roi: { txns_per_year: 50000, value_per_year: 930000 }
+pricing:
+  deployment: license_included        # license_included | byol
+  rate_card: { onshore: 175, nearshore: 85, offshore: 65 }
+  delivery_mix: { onshore: 0.2, nearshore: 0.4, offshore: 0.4 }
+  managed_services_terms: [12, 24, 36]
+  term_discount_pct: { 12: 0, 24: 10, 36: 20 }
+  run_hours_per_month: 40
+  agent_license_per_year: 35000
+oci_bom:
+  volume_tiers: [5000, 50000, 500000]
+  model: cohere_command_r
+  ocr: true
+  universal_credits_discount_pct: 20
+sow:
+  timeline_weeks: 8
+  legal_shell: generic
+  acceptance: "green live golden test + balanced interface load in customer UAT"
