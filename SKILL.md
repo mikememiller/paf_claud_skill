@@ -126,8 +126,12 @@ diagram), **SOW .docx** (signable, generic legal shell, with the diagram +
 **ROI calculator .html**, and the PAF integration package (managed-MCP tool defs
 + canvas recipe + an importable **`.paf`** minted with `core/scripts/paf_packager.py`,
 password `simple4u`; after import, **rebind** MCP+LLM and run the validation
-gate). Use the `anthropic-skills` `pptx`/`docx`/`xlsx` skills via the generators
-in `templates/deliverables/`. (`deliverables.md`.)
+gate). The generators in `templates/deliverables/` are **spec-driven** — run
+`pricing.py` (→ `output/spec.json` + `pricing.json`), then `build_diagrams.js`
+(the required hero architecture/flow diagram), `build_docx.py` (install +
+tech-design + SOW), `build_oci_bom_xlsx.py`, and `build_sales_deck.js`. Ready
+examples live in `deliverables/samples/`; the catalog is `deliverables/DELIVERABLES.md`.
+(ROI `.html` is the one roadmap generator — author per build.) (`deliverables.md`.)
 
 **Phase 6 — Converge (iterative bug-hunt, run to zero).** Loop the QA pass over
 code **and** deliverables until **two consecutive clean rounds**: full suite

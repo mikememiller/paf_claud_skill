@@ -3,8 +3,10 @@
 
 Source of truth = the in-repo markdown (`docs/*.md`, `INSTALL.md`, `README.md`)
 and the one pricing model (`pricing-and-bom.md`). The customer-facing files are
-**generated from it** so they never drift. Generators live in
-`templates/deliverables/`.
+**generated from it** so they never drift. The generators in
+`templates/deliverables/` are **spec-driven** (read `spec.yaml` via `pricing.py`'s
+`output/spec.json` + `pricing.json`, plus `assets/brand.json`); ready samples are
+in [`../deliverables/samples/`](../deliverables/samples/).
 
 > **Full generic catalog + showcase deck:** [`../deliverables/DELIVERABLES.md`](../deliverables/DELIVERABLES.md)
 > documents every deliverable in detail (domain-neutral); `../deliverables/PAF_Factory_Deliverables.pptx`
@@ -13,13 +15,15 @@ and the one pricing model (`pricing-and-bom.md`). The customer-facing files are
 
 | # | Deliverable | Format | Generator / skill |
 |---|-------------|--------|-------------------|
-| 1 | Sales deck | `.pptx` | `build_sales_deck.js` (pptxgenjs / `anthropic-skills:pptx`) |
-| 2 | Installation guide | `.docx` | `build_install_docx.py` (`anthropic-skills:docx`) |
-| 3 | Technical design doc | `.docx` | `build_techdesign_docx.py` (`docx`) — embeds the architecture diagram |
-| 4 | Statement of Work (signable) | `.docx` | `build_sow_docx.py` (`docx`) — diagram + RACI + 12/24/36 pricing + signature; generic legal shell |
-| 5 | OCI BOM + consumption estimator | `.xlsx` | `build_oci_bom_xlsx.py` (`anthropic-skills:xlsx`) |
-| 6 | Interactive ROI calculator | `.html` (+ `.xlsx`) | `build_roi_calculator` — sliders, payback, NPV; "my EBS data" mode |
-| 7 | PAF integration package | sql/md/json | managed-MCP tool defs + SQL Reports + canvas recipe (`paf-platform.md`) |
+| 0 | Hero architecture/flow diagram | `.png` | `build_diagrams.js` (from `spec.architecture`) |
+| 1 | Sales deck | `.pptx` | `build_sales_deck.js` (pptxgenjs) — embeds the diagram |
+| 2 | Installation guide | `.docx` | `build_docx.py` (stdlib OOXML, no deps) |
+| 3 | Technical design doc | `.docx` | `build_docx.py` — embeds the architecture diagram |
+| 4 | Statement of Work (signable) | `.docx` | `build_docx.py` — diagram + RACI + 12/24/36 pricing + signature; generic legal shell |
+| 5 | OCI BOM + consumption estimator | `.xlsx` | `build_oci_bom_xlsx.py` (openpyxl) |
+| 6 | Interactive ROI calculator | `.html` (+ `.xlsx`) | roadmap — author per build; pricing from `pricing.json` |
+| 7 | PAF integration package | `.paf` + sql/md/json | `core/scripts/paf_packager.py` + managed-MCP tool defs + canvas recipe (`paf-platform.md`) |
+| – | Pricing model | `.json` | `pricing.py` (one model → all docs match) |
 
 Also in-repo: `docs/*.md`, `INSTALL.md`/`setup.sh`, the EBS `XX…` PL/SQL package,
 the test suite, `QA_REPORT.md`.
@@ -30,7 +34,7 @@ the test suite, `QA_REPORT.md`.
 - **Pricing identical** across SOW / deck / ROI (all read `pricing.py` output).
 - Generate deliverables **only after Phase 4 QA is green**; then visually QA them
   in Phase 6.
-- The shipped `build_sales_deck.js` is the proven, working starting point; the
-  docx/xlsx/roi generators are authored per build by invoking the respective
-  `anthropic-skills` skill with the brand + pricing inputs (don't hand-craft
-  unbranded files).
+- The generators are **shipped + spec-driven** — run `pricing.py` (→ spec.json +
+  pricing.json), then `build_diagrams.js`, `build_docx.py`, `build_oci_bom_xlsx.py`,
+  `build_sales_deck.js`. See [`../deliverables/samples/README.md`](../deliverables/samples/README.md)
+  for the run order + ready examples. (ROI `.html` is the one roadmap item.)
