@@ -6,6 +6,11 @@ and the one pricing model (`pricing-and-bom.md`). The customer-facing files are
 **generated from it** so they never drift. Generators live in
 `templates/deliverables/`.
 
+> **Full generic catalog + showcase deck:** [`../deliverables/DELIVERABLES.md`](../deliverables/DELIVERABLES.md)
+> documents every deliverable in detail (domain-neutral); `../deliverables/PAF_Factory_Deliverables.pptx`
+> is the wow-graphics deck describing them (regen: `node ../deliverables/build_diagram.js
+> && node ../deliverables/build_deck.js`).
+
 | # | Deliverable | Format | Generator / skill |
 |---|-------------|--------|-------------------|
 | 1 | Sales deck | `.pptx` | `build_sales_deck.js` (pptxgenjs / `anthropic-skills:pptx`) |
