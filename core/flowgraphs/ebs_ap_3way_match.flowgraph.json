@@ -1,0 +1,357 @@
+{
+  "nodes": [
+    {
+      "data": {
+        "description": "Select from one of your configured LLMs an interact with it as an agent.",
+        "fieldOrder": [
+          "llmToUse",
+          "tools",
+          "subAgents",
+          "custom_instruction",
+          "agent_description",
+          "prompt",
+          "temperature"
+        ],
+        "icon": "bot",
+        "outputs": [
+          {
+            "id": "tool_output",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          },
+          {
+            "id": "agent",
+            "label": "Agent",
+            "outputTypes": [
+              "agent"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {
+          "agent_description": {
+            "componentProps": {
+              "icon": null,
+              "iconTitle": null,
+              "label": "Agent description",
+              "placeholder": null
+            },
+            "componentType": "inputText",
+            "display": true,
+            "displayCondition": null,
+            "dynamic": false,
+            "inputTypes": [
+              "message"
+            ],
+            "required": false,
+            "value": "EBS AP 3-Way Match Agent",
+            "valueType": "str"
+          },
+          "custom_instruction": {
+            "componentProps": {
+              "label": "Custom instructions",
+              "placeholder": ""
+            },
+            "componentType": "textArea",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": true,
+            "value": "You are the AP 3-Way Match Agent for Oracle EBS R12.2. You validate supplier invoices against their purchase orders and receipts, clear or escalate exceptions, and stage approved invoices for payment.\n\n===== CAPABILITIES =====\nREAD TOOLS: query_ap_invoices, query_ap_invoice_lines, query_purchase_orders, query_receipts, query_suppliers, run_readonly_query\nWRITE TOOLS (require approval): create_proposal, check_proposal_status, execute_release_hold, execute_approve_invoice, execute_stage_to_payables\nGUARDRAILS: check_guardrails, send_execution_summary\n\n===== THREE-WAY MATCH RULES =====\nFor each invoice line, match invoice -> PO line -> receipt:\n- Quantity: invoiced qty <= received qty (within tolerance)\n- Price: invoice unit price within tolerance of PO price\n- Amount: line amount == qty x price\nClassify each invoice: MATCHED, PRICE_HOLD, QTY_HOLD, RECEIPT_MISSING, or PO_MISSING.\n\n===== WORKFLOW =====\n1. Pull open/unmatched invoices for the period.\n2. For each, fetch its PO and receipt and run the three-way match.\n3. MATCHED -> propose execute_stage_to_payables. Exceptions -> explain the variance and propose the fix (release hold, request receipt, price correction) at the right risk level via create_proposal.\n4. Never execute without an APPROVED proposal (check_proposal_status). Never approve an invoice over $500 without human sign-off. Never release a hold outside guardrail limits.\n\n===== SAFETY RULES =====\n1. NEVER execute amounts over $500 without human approval.\n2. NEVER execute without proposal status = APPROVED.\n3. NEVER retry a failed execution - stop and report.\n4. ALWAYS log to the audit trail.\n\n===== RESPONSE FORMAT =====\nAP 3-WAY MATCH SUMMARY\nPeriod: [period] | Invoices reviewed: [N]\n| # | Invoice | Supplier | PO | Status | Variance | Proposed Action |\nThen list proposals with risk level (LOW/MEDIUM/HIGH).",
+            "valueType": "str"
+          },
+          "llmToUse": {
+            "componentProps": {
+              "dependsOnValueKeys": null,
+              "itemText": "label",
+              "itemValue": "value",
+              "label": "Select LLM to use",
+              "options": null,
+              "optionsEndPoint": {
+                "url": "/agentFactory/v1/agentBuilderGetRegisteredLLMS"
+              },
+              "optionsToDisplayDependingOnValue": null
+            },
+            "componentType": "selectSingle",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": null,
+            "required": false,
+            "value": "llm_model_entry",
+            "valueType": "str"
+          },
+          "prompt": {
+            "componentProps": {
+              "label": "Prompt",
+              "placeholder": ""
+            },
+            "componentType": "textArea",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": true,
+            "value": "",
+            "valueType": "str"
+          },
+          "subAgents": {
+            "componentProps": {
+              "connectionsAllowed": 10,
+              "inlineValue": true,
+              "label": "Sub-agents"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "agent"
+            ],
+            "required": false,
+            "value": [],
+            "valueType": "list"
+          },
+          "temperature": {
+            "componentProps": {
+              "label": "Temperature",
+              "max": 2,
+              "min": 0,
+              "step": 0.01
+            },
+            "componentType": "slider",
+            "display": true,
+            "required": true,
+            "value": 0.01,
+            "valueType": "number"
+          },
+          "tools": {
+            "componentProps": {
+              "connectionsAllowed": 10,
+              "inlineValue": true,
+              "label": "Tools"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "tool"
+            ],
+            "required": false,
+            "value": [
+              "node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556"
+            ],
+            "valueType": "list"
+          }
+        },
+        "title": "Agent",
+        "type": "agentStep"
+      },
+      "dragging": false,
+      "id": "node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "measured": {
+        "height": 804,
+        "width": 284
+      },
+      "position": {
+        "x": 262.0590128755365,
+        "y": 395.14806866952813
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Capture user message sent in chat.",
+        "fieldOrder": [],
+        "icon": "message-square",
+        "outputs": [
+          {
+            "id": "user_provided_input",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {},
+        "title": "Chat input",
+        "type": "chatInputComponent"
+      },
+      "dragging": false,
+      "id": "node-1c0475992ff54-c4ff2e30-dc34-47fd-bc3a-fa88810e303d",
+      "measured": {
+        "height": 141,
+        "width": 214
+      },
+      "position": {
+        "x": -207.2285407725321,
+        "y": 486.59012875536496
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Connect to the given MCP server URL and retrieve tools for use with agents.",
+        "fieldOrder": [
+          "serverSource",
+          "tool_timeout"
+        ],
+        "icon": "server",
+        "outputs": [
+          {
+            "id": "tools",
+            "label": "Tools",
+            "outputTypes": [
+              "tool"
+            ]
+          }
+        ],
+        "passInlineData": true,
+        "template": {
+          "serverSource": {
+            "componentProps": {
+              "dependsOnValueKeys": null,
+              "itemText": "label",
+              "itemValue": "value",
+              "label": "MCP server",
+              "options": null,
+              "optionsEndPoint": {
+                "url": "/agentFactory/v1/tools/mcp/sources/selection"
+              },
+              "optionsToDisplayDependingOnValue": null
+            },
+            "componentType": "selectSingle",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": null,
+            "required": false,
+            "value": 1,
+            "valueType": "str"
+          },
+          "tool_timeout": {
+            "componentProps": {
+              "label": "Timeout (seconds)",
+              "max": null,
+              "min": 1,
+              "onlyIntegers": true
+            },
+            "componentType": "inputNumber",
+            "display": true,
+            "displayCondition": null,
+            "dynamic": false,
+            "inputTypes": null,
+            "required": true,
+            "value": 1000,
+            "valueType": "int"
+          }
+        },
+        "title": "MCP server",
+        "type": "mcpServer"
+      },
+      "dragging": false,
+      "id": "node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556",
+      "measured": {
+        "height": 330,
+        "width": 284
+      },
+      "position": {
+        "x": -133.03969957081537,
+        "y": 707.4313304721031
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Send message to chat.",
+        "fieldOrder": [
+          "message"
+        ],
+        "icon": "message-square-share",
+        "outputs": [
+          {
+            "id": "output_message",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {
+          "message": {
+            "componentProps": {
+              "connectionsAllowed": 1,
+              "inlineValue": false,
+              "label": "Message"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": false,
+            "value": [],
+            "valueType": "list"
+          }
+        },
+        "title": "Chat output",
+        "type": "chatOutputComponent"
+      },
+      "dragging": false,
+      "id": "node-59721123ab1a4-eb58d297-8209-42af-aa36-ab6d32fa48d8",
+      "measured": {
+        "height": 184,
+        "width": 214
+      },
+      "position": {
+        "x": 703.741416309013,
+        "y": 605.6373390557941
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    }
+  ],
+  "edges": [
+    {
+      "data": {
+        "sourceHandleId": "user_provided_input",
+        "targetHandleId": "prompt"
+      },
+      "id": "xy-edge__node-1c0475992ff54-c4ff2e30-dc34-47fd-bc3a-fa88810e303duser_provided_input-node-1c0475992ff54-c4ff2e30-dc34-47fd-bc3a-fa88810e303d-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612fprompt-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "source": "node-1c0475992ff54-c4ff2e30-dc34-47fd-bc3a-fa88810e303d",
+      "sourceHandle": "user_provided_input-node-1c0475992ff54-c4ff2e30-dc34-47fd-bc3a-fa88810e303d",
+      "target": "node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "targetHandle": "prompt-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f"
+    },
+    {
+      "data": {
+        "sourceHandleId": "tools",
+        "targetHandleId": "tools"
+      },
+      "id": "xy-edge__node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556tools-node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612ftools-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "source": "node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556",
+      "sourceHandle": "tools-node-919be4c96a1f4-1b768bac-80df-474c-8bec-cbbbb62bf556",
+      "target": "node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "targetHandle": "tools-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f"
+    },
+    {
+      "data": {
+        "sourceHandleId": "tool_output",
+        "targetHandleId": "message"
+      },
+      "id": "xy-edge__node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612ftool_output-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f-node-59721123ab1a4-eb58d297-8209-42af-aa36-ab6d32fa48d8message-node-59721123ab1a4-eb58d297-8209-42af-aa36-ab6d32fa48d8",
+      "source": "node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "sourceHandle": "tool_output-node-ecb4e9796f924-4b4b6251-9e72-422e-8283-e5b971bf612f",
+      "target": "node-59721123ab1a4-eb58d297-8209-42af-aa36-ab6d32fa48d8",
+      "targetHandle": "message-node-59721123ab1a4-eb58d297-8209-42af-aa36-ab6d32fa48d8"
+    }
+  ]
+}

@@ -34,47 +34,21 @@ FastMCP service (`mcp.run(transport="streamable-http", host="0.0.0.0")`,
 TLS+bearer, python-oracledb thick → calls `XX…`); or ORDS/REST on EBS → PAF
 OpenAPI tool (v2/v3 **JSON**, GET/POST).
 
-## Importing on PAF 26.4 — the encrypted `.paf` bundle (this is how delivery scales)
-PAF **26.4** imports an encrypted **`.paf`** file (My Custom Flows → Import) — NOT
-a raw `.json`. Mint it with `scripts/paf_packager.py` (default password
-**`simple4u`**). Format (reverse-engineered from a real 26.4 export, round-trip
-verified):
+## Importing on PAF 26.4 — see `core/paf-import.md` (this is how delivery scales)
+The `.paf` bundle format, the packager, clone-and-mint, and the import/rebind
+workflow are **domain-neutral** — documented once in **`core/paf-import.md`**
+(mint with `core/scripts/paf_packager.py`, default password `simple4u`; both modes
+round-trip, verified; a tool-bound agent minted from a flowGraph template imported
+and **ran live on 26.4**). EBS specifics for the steps:
+1. Build the EBS Agent Spec content (`build_agentspec.py` → `flow.json`) **or**
+   clone a tool-bound template from `core/flowgraphs/` (e.g. the AP 3-way match).
+2. Pack → `.paf` and import in PAF → My Custom Flows → Import (password `simple4u`).
+3. **Rebind** to the **OCI Database Tools Managed MCP** (above) + an OCI GenAI LLM.
+   First discover real tool names: `python core/scripts/list_mcp_tools.py --url <sse>`.
+4. **Validate** with `core/validation-gate.md` against an EBS golden record.
 
-```
-.paf = base64( [16B salt][12B nonce][AES-256-GCM ct+tag] ),  PBKDF2-HMAC-SHA256 key
-plaintext = ZIP{ metadata.json, flows/<FLOWID>_<name>.json }
-envelope["data"] = Agent Spec JSON **string** (flowGraph:false, tool-free)
-                 | {nodes,edges} **object**  (flowGraph:true, TOOL-BOUND: MCP node + edges)
-```
-
-`pack_paf()` = flow/string mode; `pack_flowgraph()` = tool-bound; `unpack_paf()`
-inspects any `.paf`. Verified: both modes round-trip; wrong password → AES-GCM
-`InvalidTag`. A tool-bound agent minted from a flowGraph template imported and
-**ran live on 26.4**.
-
-**Workflow:**
-1. Build the Agent Spec content (`build_agentspec.py` → `flow.json`), **or** start
-   from a known-good exported flowGraph template.
-2. `python scripts/paf_packager.py pack --in flow.json --name "<Agent>"` → `.paf`
-   (or `clone_flowgraph` + `pack_flowgraph` for tool-bound).
-3. PAF → **My Custom Flows → Import** → upload `.paf` → password `simple4u`.
-4. **Rebind** (every import + every customer install): bind the **MCP-server node**
-   + pick an **OCI LLM** in Agent Builder. The `.paf` carries NO bindings/secrets
-   by design. First run `scripts/list_ebsvision_tools.py` so the prompt names tools
-   that actually exist.
-5. **Validate** with `references/validation-gate.md` (imports ≠ correct).
-
-**Scaling a slate (bulk-mint):** export ONE correct tool-bound flowGraph from the
-canvas, then for each agent
-`clone_flowgraph(template, new_instruction=…, new_agent_description=…)` (fresh node
-IDs everywhere, tool wiring preserved) → `pack_flowgraph` → import. That's the
-300-agent path.
-
-### Default password `simple4u` (convention, not a secret boundary)
-The `.paf` is **secret-free by design** (Instance Principal + rebind at import),
-so a shared, well-known import password just makes bulk import frictionless.
-Override with `$PAF_PASSWORD` or `password=` only if a bundle must ever carry a
-secret — it shouldn't.
+**Bulk slate (300 agents):** clone one good tool-bound flowGraph per agent
+(`clone_flowgraph` + `pack_flowgraph`) — see `core/paf-import.md`.
 
 ## Canvas — author the first template (and a valid fallback)
 Build natively when you need to *create* the tool-bound template to clone, or as a

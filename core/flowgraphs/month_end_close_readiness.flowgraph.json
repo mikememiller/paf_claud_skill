@@ -1,0 +1,357 @@
+{
+  "nodes": [
+    {
+      "data": {
+        "description": "Select from one of your configured LLMs an interact with it as an agent.",
+        "fieldOrder": [
+          "llmToUse",
+          "tools",
+          "subAgents",
+          "custom_instruction",
+          "agent_description",
+          "prompt",
+          "temperature"
+        ],
+        "icon": "bot",
+        "outputs": [
+          {
+            "id": "tool_output",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          },
+          {
+            "id": "agent",
+            "label": "Agent",
+            "outputTypes": [
+              "agent"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {
+          "agent_description": {
+            "componentProps": {
+              "icon": null,
+              "iconTitle": null,
+              "label": "Agent description",
+              "placeholder": null
+            },
+            "componentType": "inputText",
+            "display": true,
+            "displayCondition": null,
+            "dynamic": false,
+            "inputTypes": [
+              "message"
+            ],
+            "required": false,
+            "value": "Month-End Close Readiness Agent2",
+            "valueType": "str"
+          },
+          "custom_instruction": {
+            "componentProps": {
+              "label": "Custom instructions",
+              "placeholder": ""
+            },
+            "componentType": "textArea",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": true,
+            "value": "You are the Month-End Close Readiness Agent for Oracle EBS R12.2.\n\nYour job is to help the Finance Controller determine if the current period is ready to close, identify blockers, propose fixes, and execute actions.\n\n===== CAPABILITIES =====\n\nREAD TOOLS (Detection):\n- query_purchase_orders: Query POs with filters\n- query_ap_invoices: Query AP invoices with filters\n- query_ap_invoice_lines: Query invoice line details\n- query_gl_balances: Query GL balances by account/period\n- query_suppliers: Query vendor/supplier info\n- query_inventory_onhand: Query on-hand inventory\n- run_readonly_query: Execute any SELECT statement\n\nWRITE TOOLS (Execution):\n- create_proposal: Create action recommendation\n- check_proposal_status: Check if human approved/rejected\n- execute_approve_invoice: Approve invoice (requires authorization)\n- execute_create_accrual: Create accrual journal entry (requires authorization)\n- execute_release_hold: Release invoice hold (requires authorization)\n\nAUTONOMOUS TOOLS (Guardrails):\n- check_guardrails: Check if action is within auto-execute limits\n- send_execution_summary: Log/send summary of actions taken\n\n===== TWO OPERATING MODES =====\n\nYou operate in one of two modes depending on how you are triggered:\n\n--- MODE 1: INTERACTIVE (default) ---\nWhen a human is chatting with you directly.\n\nWorkflow:\n1. Run checks across AP, PO, GL, Inventory\n2. Deliver GO/NO-GO verdict with specific blockers\n3. For each blocker you can fix:\n   - Explain what you want to do\n   - State risk level (LOW/MEDIUM/HIGH)\n   - Call create_proposal\n4. WAIT for human to approve (they update xx_ai_proposals.status = 'APPROVED')\n5. After human says \"approved\" or \"execute\":\n   - Call check_proposal_status to verify status = APPROVED\n   - Call the appropriate execute_ tool\n   - Report result\n   - Re-run checks to confirm resolution\n\n--- MODE 2: AUTONOMOUS ---\nWhen the user says \"run autonomous\", \"auto-fix\", \"run pre-close autonomously\", or similar.\n\nWorkflow:\n1. Run ALL checks across AP, PO, GL, Inventory\n2. For EACH blocker found:\n   a. Determine the action type and amount\n   b. Call check_guardrails(action_type, amount)\n   c. IF can_auto_execute = true:\n      - Create proposal (status will be tracked)\n      - Execute IMMEDIATELY without asking human\n      - Add to auto-resolved list\n   d. IF can_auto_execute = false:\n      - Create proposal with status PENDING\n      - Add to needs-review list\n      - Do NOT execute\n3. After processing all items:\n   - Call send_execution_summary with:\n     - auto_resolved_items (JSON list)\n     - needs_review_items (JSON list)\n     - totals\n4. Present final summary to user/controller\n\n===== SAFETY RULES (NEVER VIOLATE \u2014 BOTH MODES) =====\n\n1. NEVER execute amounts over $500 without human approval (hard limit)\n2. NEVER auto-close a period (CLOSE_PERIOD always needs human)\n3. NEVER retry a failed execution \u2014 stop and report\n4. In INTERACTIVE mode: NEVER execute without proposal status = APPROVED\n5. In AUTONOMOUS mode: NEVER execute if check_guardrails returns can_auto_execute = false\n6. If ANY execution fails during autonomous run: STOP all further auto-executions, flag remaining items for human review\n7. ALWAYS log to audit trail (the tools do this automatically)\n\n===== RESPONSE FORMAT =====\n\nWhen delivering close readiness assessment:\n\nMONTH-END CLOSE READINESS: [GO / NO-GO]\nPeriod: [period name]\nAssessment Date: [today]\n\nBLOCKERS FOUND: [count]\n\n| # | Module | Issue | Count | Amount | Severity |\n|---|--------|-------|-------|--------|----------|\n| 1 | AP     | ...   | ...   | ...    | HIGH     |\n\n[Then either propose fixes (interactive) or auto-resolve (autonomous)]\n\nWhen delivering autonomous summary:\n\nAUTONOMOUS PRE-CLOSE SUMMARY:\n- Auto-Resolved: [count] items ($[amount])\n- Needs Your Review: [count] items ($[amount])\n\nAUTO-RESOLVED (within guardrails):\n| # | Action | Target | Amount | Guardrail |\n|---|--------|--------|--------|-----------|\n\nNEEDS YOUR REVIEW (outside guardrails):\n| # | Action | Target | Amount | Reason |\n|---|--------|--------|--------|--------|\n\n===== HOW TO DETERMINE MODE =====\n\nINTERACTIVE mode if user says:\n- \"Are we ready to close?\"\n- \"Check month-end readiness\"\n- \"Show me blockers\"\n- \"Create proposals\"\n- \"Execute proposal #X\"\n- Any conversational question\n\nAUTONOMOUS mode if user says:\n- \"Run autonomous pre-close\"\n- \"Auto-fix what you can\"\n- \"Run autonomous month-end check\"\n- \"Execute within guardrails automatically\"\n- \"Do what you can without asking me\"\n\nIf unclear, default to INTERACTIVE (safer).\n\n===== IMPORTANT NOTES =====\n\n- Connected to Oracle EBS R12.2 Vision instance\n- All queries run against APPS schema\n- Read operations use mcpreadonly (safe)\n- Write operations use mcpagent (controlled, audited)\n- Always be specific: include invoice numbers, PO numbers, amounts, vendor names\n- In autonomous mode, the guardrails table defines your boundaries \u2014 respect them absolutely",
+            "valueType": "str"
+          },
+          "llmToUse": {
+            "componentProps": {
+              "dependsOnValueKeys": null,
+              "itemText": "label",
+              "itemValue": "value",
+              "label": "Select LLM to use",
+              "options": null,
+              "optionsEndPoint": {
+                "url": "/agentFactory/v1/agentBuilderGetRegisteredLLMS"
+              },
+              "optionsToDisplayDependingOnValue": null
+            },
+            "componentType": "selectSingle",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": null,
+            "required": false,
+            "value": "llm_model_entry",
+            "valueType": "str"
+          },
+          "prompt": {
+            "componentProps": {
+              "label": "Prompt",
+              "placeholder": ""
+            },
+            "componentType": "textArea",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": true,
+            "value": "",
+            "valueType": "str"
+          },
+          "subAgents": {
+            "componentProps": {
+              "connectionsAllowed": 10,
+              "inlineValue": true,
+              "label": "Sub-agents"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "agent"
+            ],
+            "required": false,
+            "value": [],
+            "valueType": "list"
+          },
+          "temperature": {
+            "componentProps": {
+              "label": "Temperature",
+              "max": 2,
+              "min": 0,
+              "step": 0.01
+            },
+            "componentType": "slider",
+            "display": true,
+            "required": true,
+            "value": 0.01,
+            "valueType": "number"
+          },
+          "tools": {
+            "componentProps": {
+              "connectionsAllowed": 10,
+              "inlineValue": true,
+              "label": "Tools"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "tool"
+            ],
+            "required": false,
+            "value": [
+              "node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9"
+            ],
+            "valueType": "list"
+          }
+        },
+        "title": "Agent",
+        "type": "agentStep"
+      },
+      "dragging": false,
+      "id": "node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "measured": {
+        "height": 804,
+        "width": 284
+      },
+      "position": {
+        "x": 262.0590128755365,
+        "y": 395.14806866952813
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Capture user message sent in chat.",
+        "fieldOrder": [],
+        "icon": "message-square",
+        "outputs": [
+          {
+            "id": "user_provided_input",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {},
+        "title": "Chat input",
+        "type": "chatInputComponent"
+      },
+      "dragging": false,
+      "id": "node-1780400002049-dc31e662-9ea6-4b0e-8691-0e680e6822a8",
+      "measured": {
+        "height": 141,
+        "width": 214
+      },
+      "position": {
+        "x": -207.2285407725321,
+        "y": 486.59012875536496
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Connect to the given MCP server URL and retrieve tools for use with agents.",
+        "fieldOrder": [
+          "serverSource",
+          "tool_timeout"
+        ],
+        "icon": "server",
+        "outputs": [
+          {
+            "id": "tools",
+            "label": "Tools",
+            "outputTypes": [
+              "tool"
+            ]
+          }
+        ],
+        "passInlineData": true,
+        "template": {
+          "serverSource": {
+            "componentProps": {
+              "dependsOnValueKeys": null,
+              "itemText": "label",
+              "itemValue": "value",
+              "label": "MCP server",
+              "options": null,
+              "optionsEndPoint": {
+                "url": "/agentFactory/v1/tools/mcp/sources/selection"
+              },
+              "optionsToDisplayDependingOnValue": null
+            },
+            "componentType": "selectSingle",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": null,
+            "required": false,
+            "value": 1,
+            "valueType": "str"
+          },
+          "tool_timeout": {
+            "componentProps": {
+              "label": "Timeout (seconds)",
+              "max": null,
+              "min": 1,
+              "onlyIntegers": true
+            },
+            "componentType": "inputNumber",
+            "display": true,
+            "displayCondition": null,
+            "dynamic": false,
+            "inputTypes": null,
+            "required": true,
+            "value": 1000,
+            "valueType": "int"
+          }
+        },
+        "title": "MCP server",
+        "type": "mcpServer"
+      },
+      "dragging": false,
+      "id": "node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9",
+      "measured": {
+        "height": 330,
+        "width": 284
+      },
+      "position": {
+        "x": -133.03969957081537,
+        "y": 707.4313304721031
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    },
+    {
+      "data": {
+        "description": "Send message to chat.",
+        "fieldOrder": [
+          "message"
+        ],
+        "icon": "message-square-share",
+        "outputs": [
+          {
+            "id": "output_message",
+            "label": "Message",
+            "outputTypes": [
+              "message"
+            ]
+          }
+        ],
+        "passInlineData": false,
+        "template": {
+          "message": {
+            "componentProps": {
+              "connectionsAllowed": 1,
+              "inlineValue": false,
+              "label": "Message"
+            },
+            "componentType": "label",
+            "display": true,
+            "displayCondition": null,
+            "inputTypes": [
+              "message"
+            ],
+            "required": false,
+            "value": [],
+            "valueType": "list"
+          }
+        },
+        "title": "Chat output",
+        "type": "chatOutputComponent"
+      },
+      "dragging": false,
+      "id": "node-1780400020949-50471549-7493-40f6-9661-adc7f6f32bba",
+      "measured": {
+        "height": 184,
+        "width": 214
+      },
+      "position": {
+        "x": 703.741416309013,
+        "y": 605.6373390557941
+      },
+      "selected": false,
+      "type": "flowGenericNode"
+    }
+  ],
+  "edges": [
+    {
+      "data": {
+        "sourceHandleId": "user_provided_input",
+        "targetHandleId": "prompt"
+      },
+      "id": "xy-edge__node-1780400002049-dc31e662-9ea6-4b0e-8691-0e680e6822a8user_provided_input-node-1780400002049-dc31e662-9ea6-4b0e-8691-0e680e6822a8-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550prompt-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "source": "node-1780400002049-dc31e662-9ea6-4b0e-8691-0e680e6822a8",
+      "sourceHandle": "user_provided_input-node-1780400002049-dc31e662-9ea6-4b0e-8691-0e680e6822a8",
+      "target": "node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "targetHandle": "prompt-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550"
+    },
+    {
+      "data": {
+        "sourceHandleId": "tools",
+        "targetHandleId": "tools"
+      },
+      "id": "xy-edge__node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9tools-node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550tools-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "source": "node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9",
+      "sourceHandle": "tools-node-1780400013143-cf828245-b3bf-4fb3-9a29-304821942ca9",
+      "target": "node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "targetHandle": "tools-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550"
+    },
+    {
+      "data": {
+        "sourceHandleId": "tool_output",
+        "targetHandleId": "message"
+      },
+      "id": "xy-edge__node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550tool_output-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550-node-1780400020949-50471549-7493-40f6-9661-adc7f6f32bbamessage-node-1780400020949-50471549-7493-40f6-9661-adc7f6f32bba",
+      "source": "node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "sourceHandle": "tool_output-node-1780399924487-4552d542-78ea-4063-9d73-3117e5511550",
+      "target": "node-1780400020949-50471549-7493-40f6-9661-adc7f6f32bba",
+      "targetHandle": "message-node-1780400020949-50471549-7493-40f6-9661-adc7f6f32bba"
+    }
+  ]
+}

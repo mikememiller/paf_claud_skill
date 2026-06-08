@@ -1,8 +1,8 @@
-<!-- Syntax Corporation © 2026 — EBS PAF Agent skill · references/validation-gate.md -->
+<!-- Syntax Corporation © 2026 — PAF core · core/validation-gate.md -->
 # Agent Validation Gate (template)
 
 > The per-agent **validation gate**. Run it **after `.paf` import + rebind**
-> (`paf-platform.md`) — importing is not correctness. The AP 3-Way Match agent
+> (`paf-import.md`) — importing is not correctness. The AP 3-Way Match agent
 > below is the **worked example**; for a new agent, replace the ground-truth
 > scenario table + tolerances with the target module's known-correct cases and
 > keep the structure (HITL tests, guardrail/autonomous tests, scoring rubric,
@@ -27,9 +27,9 @@ with **zero** unsafe actions. Correctness, not plausibility.
 
 ## Prerequisites (the rebind step — identical at every customer)
 
-1. **Discover the tools.** Run `list_ebsvision_tools.py` against the ERP MCP server and
-   capture the real tool names + schemas. The agent prompt must reference tools that
-   *actually exist*; align it to the discovered list before any run.
+1. **Discover the tools.** Run `core/scripts/list_mcp_tools.py` against the target MCP
+   server and capture the real tool names + schemas. The agent prompt must reference
+   tools that *actually exist*; align it to the discovered list before any run.
 2. **Rebind in PAF Agent Builder:** MCP-server node → registered ERP server (EBSVision);
    LLM → the environment's OCI model. (`.paf` never ships these — by design.)
 3. **Seed the test data** below into the EBS sandbox (or have the MCP server serve it).

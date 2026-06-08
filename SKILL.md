@@ -1,33 +1,44 @@
 ---
 name: ebs-paf-agent
 description: >-
-  Build an Oracle E-Business Suite (EBS) AI agent in the Private Agent Factory
-  (PAF) pattern — document → extract → governed EBS lookups → deterministic
-  policy → EBS Open Interface, with QA, tests, Syntax-branded sales/design/SOW
-  docs, an OCI BOM + ROI calculator, and OCI-managed-MCP integration. Use when
-  the user wants to create a new EBS agent for any module (AP, AR, GL, PO,
-  Order Management, Inventory, WIP, BOM, HR/Payroll, etc.), "an agent like the
-  Oracle PAF / contract-renewals blog", to "monetize an EBS interface", or
-  "another PAF agent". Covers Financials, HR/Payroll, Manufacturing, Supply
-  Chain. Each build runs live against the target EBS DB and loops on QA until
-  zero bugs remain.
+  Build an Oracle Private Agent Factory (PAF 26.4) agent end-to-end: define →
+  (clone or author) a tool-bound flowGraph → package an importable `.paf` →
+  import → rebind MCP + LLM → validate, with QA, tests, and Syntax-branded
+  sales/design/SOW docs + OCI BOM + ROI. The domain-neutral CORE (`core/`)
+  builds ANY PAF agent; Oracle E-Business Suite (EBS) is the bundled reference
+  domain (any module — AP, AR, GL, PO, Order Management, Inventory, WIP, BOM,
+  HR/Payroll). Use when the user wants to "create a PAF agent", "an agent like
+  the Oracle PAF / contract-renewals blog", to "import an agent into Private
+  Agent Factory", "monetize an EBS interface", or "another PAF agent". Covers
+  Financials, HR/Payroll, Manufacturing, Supply Chain. Each build loops on QA
+  until zero bugs remain.
 ---
 
-# EBS PAF Agent — build factory
+# PAF Agent — build factory
 
-Produce a new EBS Private-Agent-Factory agent that is **production-correct on the
-first pass**: real verified SQL/PLSQL, a hard QA gate, and a complete branded
-deliverable set. This skill is a **guided procedure** — execute the phases with
-the user in the loop; do not silently generate a black box.
+Produce a new Oracle **Private Agent Factory (26.4)** agent that is
+**production-correct on the first pass**: real verified logic, a hard QA gate, the
+importable `.paf`, and a complete branded deliverable set. A **guided procedure**
+— execute with the user in the loop; do not silently generate a black box.
 
-**Read these references before/while building** (in `references/`):
-`architecture.md` · `oracle-gotchas.md` · `connection.md` · `paf-platform.md`
-(OCI managed MCP — the default integration) · `interface-catalog.md` (the 4 EBS
-pillars) · `qa-and-bugfixing.md` (the loop + known-bug catalog) ·
-`pricing-and-bom.md` · `branding.md` · `graphics-standard.md` · `deliverables.md`
-· `validation-gate.md` (post-import correctness gate).
+**Two layers.** The **domain-neutral core** (`core/`, start at `core/README.md`)
+designs → packages → imports → validates ANY PAF agent. A **domain pack** supplies
+the system-specific layer; **EBS is the bundled domain** (`references/` +
+`templates/`). The EBS procedure below is the worked example — for a non-EBS
+agent, follow `core/README.md` with your own domain pack.
 
-The proven engine to start from is in `templates/` (the shipped EBS AP agent,
+**Core (domain-neutral) — read first** (`core/`): `README.md` (the build
+procedure) · `paf-import.md` (`.paf` format + packager + clone-and-mint) ·
+`validation-gate.md` (post-import correctness) · `scripts/paf_packager.py` +
+`scripts/list_mcp_tools.py` · `flowgraphs/` (clone-able tool-bound templates).
+
+**EBS domain pack** (`references/`): `architecture.md` · `oracle-gotchas.md` ·
+`connection.md` · `paf-platform.md` (OCI managed MCP integration) ·
+`interface-catalog.md` (the 4 EBS pillars) · `qa-and-bugfixing.md` (the loop +
+known-bug catalog) · `pricing-and-bom.md` · `branding.md` · `graphics-standard.md`
+· `deliverables.md`.
+
+The proven EBS engine to start from is in `templates/` (the shipped EBS AP agent,
 fully tested). Reuse it; change only the variable layer (§ "What varies").
 
 ---
@@ -113,7 +124,7 @@ installation **.docx**, technical-design **.docx** (with the architecture
 diagram), **SOW .docx** (signable, generic legal shell, with the diagram +
 12/24/36-mo managed-services pricing), OCI **BOM/estimator .xlsx**, interactive
 **ROI calculator .html**, and the PAF integration package (managed-MCP tool defs
-+ canvas recipe + an importable **`.paf`** minted with `scripts/paf_packager.py`,
++ canvas recipe + an importable **`.paf`** minted with `core/scripts/paf_packager.py`,
 password `simple4u`; after import, **rebind** MCP+LLM and run the validation
 gate). Use the `anthropic-skills` `pptx`/`docx`/`xlsx` skills via the generators
 in `templates/deliverables/`. (`deliverables.md`.)
@@ -146,11 +157,11 @@ note (golden record, test commands, gotchas hit, convergence summary).
 10. Every deliverable Syntax-branded; **every file carries the Syntax
     copyright/version/build/date banner** (QA fails the build otherwise).
 11. Use a **tool-capable LLM** in PAF (OCI GenAI grok-4/gpt-5, OpenAI gpt-4o).
-    Deliver via **`.paf` import on PAF 26.4** (`scripts/paf_packager.py`, default
+    Deliver via **`.paf` import on PAF 26.4** (`core/scripts/paf_packager.py`, default
     password `simple4u`), then **rebind** the MCP server + LLM and run the
     **validation gate**. Bulk slate = clone a tool-bound flowGraph template
     (`clone_flowgraph`/`pack_flowgraph`). The canvas authors the first template
-    and is the fallback. (`paf-platform.md`, `references/validation-gate.md`)
+    and is the fallback. (`core/paf-import.md`, `core/validation-gate.md`, `references/paf-platform.md`)
 12. **Honesty:** flag anything not verifiable in-environment (managed-MCP DML
     support, PAF OAuth flow, GA coverage for the target DB, slide rendering
     without LibreOffice) in `QA_REPORT.md` — never imply it passed.
