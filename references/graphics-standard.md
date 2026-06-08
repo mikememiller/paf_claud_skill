@@ -2,8 +2,10 @@
 # Hero-graphics standard ("wow / jump off the page")
 
 Graphics in the **SOW, sales deck, and technical-design doc must be hero-grade**.
-`templates/deliverables/build_diagrams.*` renders a shared high-res visual kit
-**once**; every artifact embeds the same assets (consistency = polish).
+`templates/deliverables/build_diagrams.js` (`--kind architecture` and
+`--kind flow`) renders the shared high-res visual kit **once**; every artifact
+embeds the same assets (consistency = polish). Both are **spec-driven** (from
+`spec.architecture` and `spec.flow_diagram`).
 
 ## The kit
 - **REQUIRED: technical-architecture / deployment diagram** (in the tech-design
@@ -13,7 +15,8 @@ Graphics in the **SOW, sales deck, and technical-design doc must be hero-grade**
   the data path"), **(3) OCI Database Tools Managed MCP** (HTTPS+OAuth) reaching
   EBS via a Database Tools Connection. Draw the flow on top: document → PAF
   extract → managed-MCP tool → `XX…` PL/SQL → interface tables → standard import.
-- **Process / 3-way-match (or domain-equivalent) sequence** hero.
+- **REQUIRED: functional-flow / process sequence** hero (`build_diagrams.js
+  --kind flow` from `spec.flow_diagram`) — in the SOW + tech-design doc.
 - **ROI waterfall** + **tiered TCO** charts (brand palette).
 - **OCI BOM** consumption chart; **timeline / RACI** graphic for the SOW.
 - Dark branded title/section dividers; tri-color motif throughout.
