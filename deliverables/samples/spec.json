@@ -426,6 +426,199 @@
     "acceptance": "a green live golden test plus a balanced interface load in customer UAT",
     "legal_note": "This generic SOW shell is subject to the parties' MSA; have counsel review before use."
   },
+  "flow_diagram": {
+    "title": "How the agent works \u2014 functional flow",
+    "subhead": "Document \u2192 extract \u2192 governed lookups \u2192 deterministic policy \u2192 QA \u2192 interface",
+    "steps": [
+      {
+        "step": "Ingest",
+        "detail": "PDF / email / text invoice arrives"
+      },
+      {
+        "step": "Extract",
+        "detail": "PAF LLM node \u2192 structured invoice JSON"
+      },
+      {
+        "step": "Look up",
+        "detail": "governed EBS reads: supplier \u00b7 PO \u00b7 receipts \u00b7 tax \u00b7 GL (MCP)"
+      },
+      {
+        "step": "Match & code",
+        "detail": "deterministic 3-way match + GL/tax coding (XXPAF)"
+      },
+      {
+        "step": "QA gate",
+        "detail": "balance \u00b7 reconcile \u00b7 resolve FKs \u2014 PASS / HOLD"
+      },
+      {
+        "step": "Deliver",
+        "detail": "balanced AP interface rows \u2192 Open Interface Import"
+      }
+    ],
+    "branch": {
+      "label": "Exception / HOLD",
+      "detail": "routed to human review (AME approval) \u2014 never auto-loaded"
+    }
+  },
+  "governance": [
+    "KPI / monitoring dashboard (throughput, STP %, exception rate) via the published REST API",
+    "Exception-review console for HOLD / needs-approval invoices (human-in-the-loop)",
+    "Model & prompt management \u2014 versioned prompts, model pinning, regression checks",
+    "Periodic accuracy review \u2014 re-run the validation gate on a sampled set each quarter",
+    "Change & incident management \u2014 controlled prompt/tool changes; severity-based incident handling",
+    "Quarterly value review \u2014 realized savings vs the ROI model; tuning backlog"
+  ],
+  "timeline": {
+    "weeks": 8,
+    "phases": [
+      {
+        "name": "Discovery",
+        "weeks": "1\u20132",
+        "outcomes": "Confirm volumes, invoice mix, target OU; finalize spec.yaml; access + Database Tools Connection"
+      },
+      {
+        "name": "Build",
+        "weeks": "3\u20135",
+        "outcomes": "XXPAF PL/SQL + managed-MCP tools; agent flowGraph; deliverables generated"
+      },
+      {
+        "name": "Validate",
+        "weeks": "6",
+        "outcomes": "Validation gate on ground-truth set; Python\u2194PL/SQL parity; zero unsafe actions"
+      },
+      {
+        "name": "Go-live",
+        "weeks": "7",
+        "outcomes": "Import .paf, rebind MCP + LLM, UAT, scheduled Open Interface Import"
+      },
+      {
+        "name": "Hypercare",
+        "weeks": "8",
+        "outcomes": "Monitored run, exception triage, KT; transition to managed services"
+      }
+    ]
+  },
+  "raci_full": [
+    [
+      "Activity",
+      "Syntax",
+      "Customer"
+    ],
+    [
+      "Discovery & spec sign-off",
+      "R/A",
+      "C"
+    ],
+    [
+      "EBS access / Database Tools Connection",
+      "C",
+      "R/A"
+    ],
+    [
+      "XXPAF PL/SQL build + deploy",
+      "R",
+      "A"
+    ],
+    [
+      "Managed-MCP tool registration",
+      "R",
+      "C"
+    ],
+    [
+      "Agent build + .paf import",
+      "R",
+      "C"
+    ],
+    [
+      "Validation-gate execution",
+      "R",
+      "C"
+    ],
+    [
+      "UAT & acceptance",
+      "C",
+      "R/A"
+    ],
+    [
+      "Go-live & scheduling",
+      "R",
+      "A"
+    ],
+    [
+      "Ongoing managed services",
+      "R",
+      "C"
+    ],
+    [
+      "Security / change approvals",
+      "C",
+      "R/A"
+    ]
+  ],
+  "slas": [
+    [
+      "Metric",
+      "Target"
+    ],
+    [
+      "Agent service availability",
+      "99.5% monthly (excl. EBS/OCI maintenance)"
+    ],
+    [
+      "P1 (service down) response / resolution",
+      "1 hr / 8 business hrs"
+    ],
+    [
+      "P2 (degraded) response / resolution",
+      "4 business hrs / 2 business days"
+    ],
+    [
+      "P3 (question / minor) response",
+      "1 business day"
+    ],
+    [
+      "Support hours",
+      "8\u00d75 (24\u00d77 optional)"
+    ],
+    [
+      "QA-gate pass on accepted invoices",
+      "100% balanced + reconciled before load"
+    ],
+    [
+      "Extraction accuracy (sampled)",
+      "\u2265 98% on in-scope document types"
+    ]
+  ],
+  "entitlements": [
+    [
+      "Item",
+      "Included"
+    ],
+    [
+      "Agent license",
+      "1 production agent (this domain); add-on agents priced separately"
+    ],
+    [
+      "Environments",
+      "Production + one non-prod (UAT)"
+    ],
+    [
+      "Included run hours",
+      "40 hrs/month managed-services run team"
+    ],
+    [
+      "Updates & upgrades",
+      "Prompt / model / tool updates + PAF-release compatibility"
+    ],
+    [
+      "Support tier",
+      "Standard 8\u00d75 (per SLA table); premium 24\u00d77 optional"
+    ],
+    [
+      "Documentation",
+      "Installation, technical design, validation gate, QA report"
+    ]
+  ],
   "org_id": 204,
   "source": [
     {
