@@ -42,6 +42,7 @@ class Docx:
     def para(self, t): self._p(self._run(t))
     def code(self, t): self._p(self._run(t, sz=18, mono=True))
     def footer(self, t): self._p(self._run(t, sz=16, color=SLATE), 0, "center")
+    def page_break(self): self.body.append('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
 
     def bullet(self, t):
         self.body.append('<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>'
@@ -121,6 +122,7 @@ def main(argv=None) -> int:
     ap.add_argument("--spec", default="build/spec.json")
     ap.add_argument("--pricing", default="build/pricing.json")
     ap.add_argument("--diagram", default="build/architecture.png")
+    ap.add_argument("--flow", default="build/flow.png")
     ap.add_argument("--out", default="build")
     ap.add_argument("--prefix", default="")
     a = ap.parse_args(argv)
@@ -130,6 +132,7 @@ def main(argv=None) -> int:
     meta = spec["meta"]; foot = (spec.get("branding") or {}).get("footer", "Syntax Corporation © 2026 · Confidential")
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     diagram = Path(a.diagram) if Path(a.diagram).exists() else None
+    flow = Path(a.flow) if Path(a.flow).exists() else None
 
     # 1. Installation Guide
     d = Docx(); d.title(f"{meta['agent_name']} — Installation Guide")
@@ -149,6 +152,8 @@ def main(argv=None) -> int:
     d.h1("Architecture")
     if diagram: d.image(diagram)
     d.para(td["intro"])
+    if flow:
+        d.h1("Functional flow"); d.image(flow)
     d.h1("Processing")
     for b in td["processing"]: d.bullet(b)
     d.h1("Interface contract")
@@ -156,18 +161,59 @@ def main(argv=None) -> int:
     d.h1("Assurance"); d.para(td["assurance"])
     d.footer(foot); d.save(out / f"{a.prefix}Technical_Design.docx")
 
-    # 3. Statement of Work
+    # 3. Statement of Work (comprehensive, sales-grade)
     sow = spec["sow"]; ms = pr["managed_services"]["medium"]; roi = pr["roi"]
-    d = Docx(); d.title("Statement of Work")
-    d.subtitle(f"{meta['agent_name']} · Syntax Corporation")
-    d.h1("1. Overview & scope"); d.para(sow["overview"])
-    d.h1("2. Architecture")
+    rs = spec.get("roi_slide", {}); co = rs.get("callout", {})
+    d = Docx()
+    d.title("Statement of Work")
+    d.subtitle(f"{meta['agent_name']} · Syntax Corporation · {foot}")
+    d.page_break()
+
+    d.h1("1. Business problem")
+    if spec.get("problem", {}).get("note"): d.para(spec["problem"]["note"])
+    for c in spec.get("problem", {}).get("cards", []):
+        d.bullet(f"{c.get('big','')} — {c.get('desc','')}")
+
+    d.h1("2. Solution")
+    for c in spec.get("solution", {}).get("cards", []):
+        d.bullet(f"{c.get('title','')}: {c.get('desc','')}")
+    if spec.get("solution", {}).get("note"): d.para(spec["solution"]["note"])
+
+    d.h1("3. Value proposition")
+    mult = f"; {co.get('multiple')} return on the agent fee" if co.get("multiple") else ""
+    d.para(f"Estimated annual value ~{money(roi['gross_annual_value'])}; first-year net "
+           f"~{money(roi['net_annual_savings'])}; payback ~{roi['payback_months']} months{mult}.")
+    for b in rs.get("bars", []):
+        d.bullet(f"{str(b.get('label','')).replace(chr(10), ' ')}: ${b.get('value_k')}K / yr")
+
+    d.h1("4. Functional flow")
+    if flow: d.image(flow)
+    d.h1("5. Technical architecture")
     if diagram: d.image(diagram)
-    d.h1("3. Deliverables")
+
+    d.h1("6. Scope & deliverables")
     for b in sow["deliverables"]: d.bullet(b)
-    d.h1("4. Responsibilities (RACI summary)")
-    d.table(sow["raci"], widths=[5360, 2000, 2000])
-    d.h1("5. Pricing")
+
+    d.h1("7. Ongoing governance deliverables")
+    for b in spec.get("governance", []): d.bullet(b)
+
+    d.h1("8. Implementation timeline")
+    tl = spec.get("timeline", {})
+    d.para(f"Target duration: {tl.get('weeks','')} weeks.")
+    d.table([["Phase", "Weeks", "Outcomes"],
+             *[[p["name"], p["weeks"], p["outcomes"]] for p in tl.get("phases", [])]],
+            widths=[2200, 1300, 5860])
+
+    d.h1("9. RACI matrix")
+    d.table(spec.get("raci_full", sow.get("raci")), widths=[5360, 2000, 2000])
+
+    d.h1("10. Service levels (SLAs)")
+    d.table(spec.get("slas", [["Metric", "Target"]]), widths=[5360, 4000])
+
+    d.h1("11. Entitlements")
+    d.table(spec.get("entitlements", [["Item", "Included"]]), widths=[3360, 6000])
+
+    d.h1("12. Pricing")
     d.para(f"Implementation (fixed fee, blended ${pr['blended_rate']:.0f}/hr, "
            f"{spec['pricing']['implementation_hours']} hrs):")
     d.table([["Item", "Amount"],
@@ -179,11 +225,17 @@ def main(argv=None) -> int:
              ["24 months", money(ms["24_month"]["monthly"]), f"{ms['24_month']['discount_pct']}%"],
              ["36 months", money(ms["36_month"]["monthly"]), f"{ms['36_month']['discount_pct']}%"]],
             widths=[3360, 3000, 3000])
-    d.para(f"Estimated first-year net savings ~ {money(roi['net_annual_savings'])}; "
-           f"payback ~ {roi['payback_months']} months. See the ROI calculator and OCI BOM for detail.")
-    d.h1("6. Acceptance & signatures")
-    d.para(f"Acceptance: {sow['acceptance']}. {sow.get('legal_note','')}")
-    d.para(" ")
+
+    d.h1("13. OCI Bill of Materials")
+    d.table([["Component", "Pricing model", "Notes"],
+             *[[b["component"], b["pricing"], b["notes"]] for b in spec.get("bom", [])]],
+            widths=[3800, 3000, 2560])
+
+    d.h1("14. Acceptance & assumptions")
+    d.para(f"Acceptance: {sow['acceptance']}.")
+    if sow.get("legal_note"): d.para(sow["legal_note"])
+
+    d.h1("15. Signatures")
     d.table([["For Customer", "For Syntax Corporation"], ["Name:", "Name:"],
              ["Title:", "Title:"], ["Signature / Date:", "Signature / Date:"]], widths=[4680, 4680])
     d.footer(foot); d.save(out / f"{a.prefix}SOW.docx")
