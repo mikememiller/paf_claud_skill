@@ -13,11 +13,17 @@ envelope["data"] = Agent Spec JSON **string** (flowGraph:false, tool-free map)
 ```
 
 **Real flowGraph schema** (`flowGraph:true`, decrypted from a live export):
-- nodes typed `agentStep` | `chatInputComponent` | `mcpServer` | `chatOutputComponent`
-- the `agentStep` template carries `custom_instruction`, `agent_description`,
-  `llmToUse`, `prompt`, `tools` — where `tools.value = [<mcpServer node id>]`
-- the `mcpServer` template carries `serverSource` (an index/ref, rebound at import)
-- edge `id`s **embed the node ids** they connect
+- every node's top-level `type` is `flowGenericNode`; the **node kind is in
+  `data.type`** = `agentStep` | `chatInputComponent` | `mcpServer` |
+  `chatOutputComponent` (do NOT expect the kind at the top-level `type`)
+- the `agentStep` `data.template` carries `custom_instruction`, `agent_description`,
+  `llmToUse` (placeholder `"llm_model_entry"`), `prompt`, `temperature`, `subAgents`,
+  `tools` — where `tools.value = [<mcpServer node id>]`
+- the `mcpServer` `data.template` carries `serverSource` (an index/ref, rebound at
+  import) + `tool_timeout`
+- edge `id`s **embed the node ids** they connect (in `source`/`target`,
+  `sourceHandle`/`targetHandle` = `<handle>-<nodeId>`, AND inside the `id` string) —
+  so a clone must remap every node id everywhere
 
 ## Packager (`scripts/paf_packager.py`)
 `pack_paf` (flow/string) · `pack_flowgraph` (tool-bound object) · `unpack_paf`
