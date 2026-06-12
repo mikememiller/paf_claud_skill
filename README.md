@@ -1,4 +1,4 @@
-<!-- Syntax Corporation © 2026 — paf_claud_skill · README.md · v1.0.0 · 2026-06-08 -->
+<!-- Syntax Corporation © 2026 — paf_claud_skill · README.md · v2.0.0 · 2026-06-11 -->
 # PAF Agent Factory — a Claude skill
 
 Build an **Oracle Private Agent Factory (PAF 26.4)** agent end-to-end:
@@ -17,6 +17,21 @@ entry point). It is built in two layers:
 > **Why this exists.** PAF **26.4** imports an encrypted **`.paf`** bundle (not raw
 > JSON). This repo ships a reverse-engineered, round-trip-verified packager plus a
 > guided factory for producing correct, branded, importable agents at scale.
+
+## v2.0.0 — the loop is enforced, not described
+
+v2 adds an **enforcement layer** (see `UPGRADE-2.0.md` + `references/orchestration.md`):
+
+| Mechanism | What it does |
+|---|---|
+| `scripts/build_state.py` + `converged.py` | Phase 6 convergence as a state machine — 2 consecutive clean QA rounds to ship; ceiling → `ESCALATION.md` |
+| `scripts/lint_paf.py` | artifact linter locked to the verified 26.4 flowGraph schema (+ `.paf` decrypt check, spec keys, banners, the 25.3 version axis) |
+| `scripts/qa_pass.py` v2 | records every round; enforces the every-fix-adds-a-test rule; runs seeded `qa_checks/` (balancing, Python↔PL/SQL parity) |
+| `scripts/hooks/` + SKILL.md frontmatter | SessionStart context, Bash guards, lint-on-write, and a Stop gate that blocks "done" before convergence (Claude Code CLI) |
+| `agents/` | `paf-discovery`, `paf-validator`, `paf-deliverables` subagents — fresh-context separation of duties |
+| `scripts/scaffold_enforcement.py` | installs all of the above into each generated build repo (Phase 2) |
+| `scripts/selftest.py` | executable proof — 11 scenarios, no live EBS needed |
+
 
 ## Quick start (the core packager)
 
