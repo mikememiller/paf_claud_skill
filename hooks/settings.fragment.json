@@ -1,0 +1,19 @@
+{
+  "_comment": "Syntax Corporation © 2026 — EBS PAF Agent skill v2.0.0 (2026.06.11). OPTIONAL settings-level hook wiring. The PRIMARY wiring is the SKILL.md frontmatter; enable exactly ONE of the two or every gate fires twice. To use this instead: merge the 'hooks' object into <project>/.claude/settings.json after scaffold_enforcement.py has installed .claude/paf-hooks/.",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/paf-hooks/session_context.py" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash",
+        "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/paf-hooks/bash_guard.py" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Write|Edit",
+        "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/paf-hooks/post_write_lint.py" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/paf-hooks/stop_gate.py" } ] }
+    ]
+  }
+}
