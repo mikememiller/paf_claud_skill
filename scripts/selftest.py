@@ -360,16 +360,25 @@ def s09_agent_frontmatter(sandbox: Path) -> str:
 
 
 def s10_skill_frontmatter(sandbox: Path) -> str:
+    import json as _json
     import yaml
     text = (SKILL / "SKILL.md").read_text()
     parts = text.split("---")
     fm = yaml.safe_load(parts[1])
     expect(bool(fm.get("name")) and bool(fm.get("description")),
            "SKILL.md name/description missing")
-    hooks_block = fm.get("hooks")
-    expect(isinstance(hooks_block, dict), "SKILL.md frontmatter has no hooks block")
+    # Frontmatter must be upload-clean for claude.ai / Cowork / Skills API:
+    # only {name, description, license, allowed-tools, metadata, compatibility}.
+    ALLOWED = {"name", "description", "license", "allowed-tools", "metadata", "compatibility"}
+    unexpected = set(fm.keys()) - ALLOWED
+    expect(not unexpected, f"SKILL.md frontmatter has upload-invalid key(s): {unexpected}")
+    expect("hooks" not in fm, "hooks must NOT be in frontmatter (breaks upload); wire via settings.fragment.json")
+    # The 4-event hook wiring now lives in hooks/settings.fragment.json.
+    frag = _json.loads((SKILL / "hooks" / "settings.fragment.json").read_text())
+    hooks_block = frag.get("hooks")
+    expect(isinstance(hooks_block, dict), "settings.fragment.json has no hooks block")
     for event in ("SessionStart", "PreToolUse", "PostToolUse", "Stop"):
-        expect(event in hooks_block, f"hooks block missing {event}")
+        expect(event in hooks_block, f"fragment hooks missing {event}")
         for entry in hooks_block[event]:
             for h in entry["hooks"]:
                 expect(h["type"] == "command" and ".claude/paf-hooks/" in h["command"],
@@ -378,7 +387,7 @@ def s10_skill_frontmatter(sandbox: Path) -> str:
     expect(pre.get("matcher") == "Bash", "PreToolUse matcher must be Bash")
     post = hooks_block["PostToolUse"][0]
     expect(post.get("matcher") == "Write|Edit", "PostToolUse matcher must be Write|Edit")
-    return "SKILL.md frontmatter + 4-event hooks block parse and point at .claude/paf-hooks/"
+    return "frontmatter upload-clean (no hooks key); 4-event wiring in settings.fragment.json → .claude/paf-hooks/"
 
 
 def s11_dogfood_banners(sandbox: Path) -> str:

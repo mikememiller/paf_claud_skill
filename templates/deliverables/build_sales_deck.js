@@ -1,9 +1,12 @@
 /*
  * Syntax Corporation (c) 2026 — PAF Agent Factory
  * build_sales_deck.js — SPEC-DRIVEN Syntax-branded sales/exec deck (pptxgenjs):
- * Problem · Solution · Value · Architecture (hero diagram) · Trust · Proof · ROI ·
- * Why · Next steps. All content from build/spec.json + build/pricing.json; the
- * architecture image from build/architecture.png. v2.0.0 / 2026.06.08.
+ * Problem · Solution · Architecture (hero diagram) · Trust · Monitoring · Proof ·
+ * ROI · Why · Next steps. All content from build/spec.json + build/pricing.json;
+ * the architecture image from build/architecture.png. v2.1.0 / 2026.06.13.
+ * (Monitoring slide is optional — renders when spec.monitoring is present; it is
+ *  the "adult supervision" two-plane message: Plane A observability + Plane B
+ *  availability. See references/observability.md.)
  *   node build_sales_deck.js --spec build/spec.json --pricing build/pricing.json \
  *        --diagram build/architecture.png --out build/Sample_Sales_Deck.pptx
  *   (needs pptxgenjs + react + react-dom + react-icons + sharp; reuse via NODE_PATH)
@@ -65,6 +68,10 @@ async function build() {
   const keys = new Set(["check"]);
   for (const sec of ["problem", "solution", "controls", "why_us"])
     for (const c of (spec[sec] && spec[sec].cards) || []) if (c.icon) keys.add(c.icon);
+  if (spec.monitoring) {
+    keys.add(spec.monitoring.plane_a_icon || "gauge");
+    keys.add(spec.monitoring.plane_b_icon || "shield");
+  }
   const I = {}; for (const k of keys) I[k] = await iconPng(k);
 
   // 1 TITLE
@@ -123,8 +130,39 @@ async function build() {
     footer(s, 5);
   }
 
-  // 6 PROOF (optional)
+  // 6 MONITORING / OBSERVABILITY (optional) — "adult supervision"
   let n = spec.controls ? 6 : 5;
+  if (spec.monitoring) {
+    const m = spec.monitoring;
+    s = pres.addSlide(); s.background = { color: PAPER };
+    kicker(s, m.kicker || "Adult supervision"); title(s, m.title);
+    const planes = [
+      { d: m.plane_a, accent: CYAN,  tag: "PLANE A",
+        role: m.plane_a_role || "Agent observability — the differentiator", icon: m.plane_a_icon || "gauge" },
+      { d: m.plane_b, accent: GREEN, tag: "PLANE B",
+        role: m.plane_b_role || "Platform availability — table stakes",     icon: m.plane_b_icon || "shield" },
+    ];
+    planes.forEach((pl, i) => {
+      if (!pl.d) return;
+      const x = 0.6 + i * 6.15, y = 2.0, w = 5.9, hh = 3.25;
+      s.addShape(pres.shapes.RECTANGLE, { x, y, w, h: hh, fill: { color: MIST }, line: { color: LINE, width: 1 }, shadow: shadow() });
+      s.addShape(pres.shapes.RECTANGLE, { x, y, w, h: 0.62, fill: { color: pl.accent } });
+      s.addShape(pres.shapes.OVAL, { x: x + 0.22, y: y + 0.13, w: 0.36, h: 0.36, fill: { color: PAPER } });
+      s.addImage({ data: I[pl.icon] || I.check, x: x + 0.285, y: y + 0.195, w: 0.23, h: 0.23 });
+      s.addText(pl.tag, { x: x + 0.72, y: y + 0.12, w: 1.6, h: 0.38, fontFace: BODY, fontSize: 12, bold: true, color: PAPER, charSpacing: 2, valign: "middle", margin: 0 });
+      s.addText(pl.role, { x: x + 2.1, y: y + 0.12, w: w - 2.25, h: 0.38, fontFace: BODY, fontSize: 10.5, color: PAPER, valign: "middle", align: "right", margin: 0 });
+      const bullets = (pl.d.points || []).map(t => ({ text: t, options: { bullet: { code: "2022", indent: 14 }, breakLine: true, paraSpaceAfter: 7 } }));
+      s.addText(bullets, { x: x + 0.4, y: y + 0.82, w: w - 0.78, h: hh - 1.0, fontFace: BODY, fontSize: 12.5, color: INK, margin: 0, lineSpacingMultiple: 1.08, valign: "top" });
+    });
+    const chips = m.chips || ["Masking on by default", "One OAuth client per agent", "Correlated in OCI Logging Analytics"];
+    chips.slice(0, 3).forEach((c, i) => { const x = 0.6 + i * 4.1;
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 5.5, w: 3.85, h: 0.55, rectRadius: 0.06, fill: { color: NAVY } });
+      s.addText(c, { x: x + 0.12, y: 5.5, w: 3.61, h: 0.55, fontFace: BODY, fontSize: 11.5, bold: true, color: PAPER, valign: "middle", align: "center", margin: 0 }); });
+    if (m.note) s.addText(m.note, { x: 0.6, y: 6.22, w: 12.1, h: 0.5, fontFace: BODY, fontSize: 13, italic: true, color: NAVY, margin: 0, lineSpacingMultiple: 1.1 });
+    footer(s, n); n++;
+  }
+
+  // 7 PROOF (optional)
   if (spec.proof) {
     const p = spec.proof;
     s = pres.addSlide(); s.background = { color: NAVY_DK };

@@ -77,17 +77,14 @@ return freely mid-loop. Convergence is the orchestrator's responsibility.
 | `PostToolUse` (Write\|Edit) | `post_write_lint.py` | lints `*.flowgraph.json`, `*.paf`, `spec.yaml`, banner on build `.py` the moment they are written; findings reach the model immediately |
 | `Stop` / `SubagentStop` | `stop_gate.py` | the convergence gate (table above); honors `stop_hook_active`; skips subagents |
 
-**Wiring — enable exactly ONE:**
-- **Primary:** the `hooks:` block in SKILL.md frontmatter (component-scoped;
-  travels with the skill; cleaned up when the skill unloads).
-- **Alternative:** merge `hooks/settings.fragment.json` into
-  `<project>/.claude/settings.json` (uses `$CLAUDE_PROJECT_DIR`).
-- Enabling both fires every gate twice. The gates are idempotent, so doubled
-  wiring wastes time rather than corrupting state — but fix it.
-
-**Command resolution.** Frontmatter hook commands are project-relative
-(`python3 .claude/paf-hooks/…`) and exist because Phase 2 runs
-`scaffold_enforcement.py`. Launch Claude Code from the project root. If the
+**Wiring (Claude Code):** merge `hooks/settings.fragment.json` into
+`<project>/.claude/settings.json` (uses `$CLAUDE_PROJECT_DIR`) after Phase 2's
+`scaffold_enforcement.py` installs `.claude/paf-hooks/`. The hook commands are
+project-relative (`python3 .claude/paf-hooks/…`), so launch Claude Code from the
+project root. SKILL.md frontmatter no longer carries a `hooks:` block — that key
+is invalid for claude.ai / Cowork / Skills API upload, so the settings-fragment
+is the single wiring path. On claude.ai / Cowork no hooks fire; the gates are
+binding procedurally (run `qa_pass.py` then `converged.py --report`). If the
 scripts are absent (non-PAF project, scaffold not run), the commands fail
 non-blocking and the hooks are inert — by design, the skill must never jam
 unrelated work.

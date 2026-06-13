@@ -70,6 +70,25 @@ controls:                                  # deck "trust & control" slide
     - { icon: check,  title: "QA gate before load",  desc: "Every invoice is checked to balance, reconcile and resolve all FKs; failures are held, never imported." }
   note: "Every interface row is stamped with the agent run-id and a confidence score — traceable end to end."
 
+monitoring:                                # optional "adult supervision" slide (omit the key to skip) — see references/observability.md
+  kicker: "Adult supervision"
+  title: "We see inside every run — and keep the platform up"
+  plane_a:                                 # the differentiator (PAF 26.4 OTEL traces)
+    points:
+      - "Every run traced: each step, tool call and LLM call — latency and cost attributed per run, agent and time window"
+      - "Tool-call success rate flags a degraded MCP server or ERP backend before users feel it"
+      - "Automated evaluators score groundedness and tool-call validity — quality signal without storing payloads"
+  plane_b:                                 # table stakes (synthetic availability probes)
+    points:
+      - "Synthetic probes replicate every PAF connection — DB 26ai, model endpoint, MCP, egress — from PAF's vantage point"
+      - "Credential-expiry calendar and config-drift watch catch silent outages before they fire"
+      - "SLA-backed: PAF/UI 99.5%, DB reachability 99.9%, MCP tool-call success ≥ 98%"
+  chips:
+    - "Masking on by default"
+    - "One OAuth client per agent"
+    - "Correlated in OCI Logging Analytics"
+  note: "Both planes land on one CxHub pane: Plane B keeps the foundation up to an SLA; Plane A shows inside every agent run. That recurring supervision is what the foundation fee buys — and what generation-only competitors cannot stand behind."
+
 proof:                                     # optional live-proof slide (omit the key to skip)
   kicker: "PROVEN ON LIVE EBS VISION DATA"
   title: "Real invoice. Real PO. Clean match."
@@ -221,7 +240,7 @@ flow_diagram:
 
 # --- ongoing governance deliverables (SOW) -----------------------------------
 governance:
-  - "KPI / monitoring dashboard (throughput, STP %, exception rate) via the published REST API"
+  - "Two-plane monitoring (Plane A: PAF 26.4 OTEL traces — run/step/tool/LLM; Plane B: synthetic availability probes) surfaced in CxHub — see observability block"
   - "Exception-review console for HOLD / needs-approval invoices (human-in-the-loop)"
   - "Model & prompt management — versioned prompts, model pinning, regression checks"
   - "Periodic accuracy review — re-run the validation gate on a sampled set each quarter"
@@ -297,3 +316,18 @@ paf:
   llm_model: "xai.grok-4"
   plsql_schema: XXPAF
   import_password: simple4u
+
+# --- observability / monitoring (PAF 26.4 — see references/observability.md) --
+# Drives the monitoring TDD + CxHub data-contract deliverables and the BOM
+# monitoring lines. Backend/collector/host values are set at DEPLOYMENT and do
+# NOT travel in the .paf (same rule as every binding).
+observability:
+  tracing_backend: langfuse           # phoenix | langfuse | opik (langfuse = shared multi-tenant default)
+  topology: shared                    # shared (tenant-tagged) | dedicated (in customer boundary)
+  masking: on                         # on (default) | off — off REQUIRES authorization + retention window + in-boundary backend
+  backend_host: ""                    # set at deployment; not in .paf
+  otel_collector_url: ""              # PAF points HERE, never at the backend; set at deployment
+  plane_b_probes: true                # include the Plane B probe set in deliverables + BOM
+  per_agent_oauth_client: true        # HARD RULE: one OAuth client per agent (family) — never a shared "PAF" client
+  automated_eval: false               # L3: backend evaluators score quality without storing payloads (roadmap per agent)
+  customer_data_handling_profile: ""  # path/reference to the masking + residency decision record

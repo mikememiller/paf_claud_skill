@@ -37,7 +37,7 @@ procedure changed — Phases 0–7 and Rules 1–12 stand, same numbering.
 Handoff contract: artifacts on disk, verdicts in conversation
 (`references/orchestration.md` §2).
 
-**C. Hooks (SKILL.md frontmatter + `scripts/hooks/`)**
+**C. Hooks (`hooks/settings.fragment.json` + `scripts/hooks/`)**
 - SessionStart → environment ground truth injected (PAF version, MCP endpoint,
   convergence state, invariants); silent outside PAF projects.
 - PreToolUse(Bash) → blocks `num_rows` reads from `*_TABLES` and DROP/TRUNCATE
@@ -68,9 +68,11 @@ python ~/.claude/skills/ebs-paf-agent/scripts/scaffold_enforcement.py \
     --target /path/to/build-repo --init-state
 ```
 
-Launch Claude Code from the build-repo root (the frontmatter hook commands are
-project-relative). Optional settings-level wiring instead of frontmatter:
-`hooks/settings.fragment.json` — enable exactly ONE of the two.
+Launch Claude Code from the build-repo root (the hook commands are
+project-relative). Wire via `hooks/settings.fragment.json` merged into
+`<project>/.claude/settings.json` after the scaffold installs `.claude/paf-hooks/`.
+(SKILL.md frontmatter no longer carries hooks — that key is invalid for
+claude.ai / Cowork / Skills API upload.)
 
 ## Decisions log (the judgment calls, so you can reverse them deliberately)
 
@@ -115,8 +117,8 @@ project-relative). Optional settings-level wiring instead of frontmatter:
   hooks at the documented moments, and the working directory they run with, is
   only provable in a live CLI session (smoke-test steps 3–5). Everything below
   that line — the scripts' behavior on every payload shape — is proven by
-  `selftest.py`. If frontmatter hooks do not fire in your CLI version, switch
-  to the settings fragment (decision #2).
+  `selftest.py`. Wire the hooks via the settings fragment (decision #2); if they
+  do not fire in your CLI version, re-check the merge into `.claude/settings.json`.
 - **End-to-end AP reference build** — needs your CLI + live EBS; pending.
 - **pyagentspec deep validation** covers the tool-free Agent Spec string mode
   (`AgentSpecDeserializer.from_json`, pyagentspec 26.1.2); tool-bound

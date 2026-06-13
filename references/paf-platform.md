@@ -62,13 +62,11 @@ dashboard). Then **Export** the flow (`.paf`) to get a clone-able template.
 MCP **URL** + **OAuth** (authorization-code) or token; tools auto-discover;
 default node timeout 45 s; multiple MCP servers can attach to one Agent.
 
-## History (SUPERSEDED): import was blocked on PAF 25.3.0.0.9
-On **25.3.0.0.9**, file-import rejected every tool-free Agent Spec with *"Tools
-are missing to be declared,"* and the LangGraph/AutoGen adapters wrapped every
-node as a ToolNode — so we concluded **canvas-only** and drafted an Oracle SR.
-**That conclusion is obsolete on 26.4**, where the encrypted `.paf` path above
-works (incl. tool-bound). Archived experiments live in the AP reference project
-under `paf/_archive_25_3/`.
+## History (ARCHIVED): 25.3.0.0.9 import block — no longer relevant
+On 25.3.0.0.9, file-import rejected tool-free Agent Specs ("Tools are missing to
+be declared") and we concluded canvas-only. **Obsolete on 26.4** — the encrypted
+`.paf` path (incl. tool-bound) round-trips. Archived experiments live in the AP
+reference project under `paf/_archive_25_3/`. The estate is now on 26.4.
 
 ## Manual facts to honor
 - **Tool-capable LLM required** (OCI GenAI `xai.grok-4`/`openai.gpt-5`, OpenAI
@@ -79,11 +77,21 @@ under `paf/_archive_25_3/`.
   self-signed TLS by default; dedicated DB user with set grants.
 - **26.4 DOES export flows** (`.paf`) from the UI → you CAN round-trip a template
   (export → `clone_flowgraph` → re-import). (25.3 had no export.)
-- **No built-in agent monitoring or human-approval node yet** → a **KPI
-  dashboard** and **exception-review console** are real add-ons (consume the
-  published REST API). **Datasets/Prompt Lab** tune prompts but are not a scored
-  eval harness → our pytest + golden + parity tests + the validation gate remain
-  the QA mechanism.
+- **Native OTEL observability is live in 26.4** (this supersedes the old "no
+  built-in monitoring" note). PAF exports OpenTelemetry traces/spans for every
+  flow run, step, tool call, and LLM call to a configured backend. Four hard
+  constraints shape the build: **one tracing config per instance** (add control
+  disabled while one exists → route through an OTEL collector for multi-tenant
+  fan-out); **admin-only and does not travel** (set per environment, like every
+  binding); **masking is binary** (payload-level, no field-level granularity);
+  **external backends need the proxy allow-list**. Supported backends: Arize
+  Phoenix / Langfuse / Comet Opik (OSS cores). Full design in
+  **`observability.md`** — two-plane model (Plane A agent observability + Plane B
+  platform availability), masking decision, collector pattern, OCI Logging
+  Analytics correlation hub, and the **per-agent OAuth client** audit rule.
+- **Datasets/Prompt Lab** tune prompts but are not a scored eval harness → our
+  pytest + golden + parity tests + the validation gate remain the build-time QA
+  mechanism; runtime quality is scored via backend evaluators (`observability.md`).
 
 ## Install-time verify items
 PAF release **≥ 26.4** (for `.paf` import) · managed-MCP support for the target

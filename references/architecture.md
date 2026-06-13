@@ -25,6 +25,20 @@ deterministic policy → EBS Open Interface**, with QA + branded deliverables.
 - **Reference/test:** the Python engine above — also the **test oracle** that the
   EBS PL/SQL must match (parity test, see `qa-and-bugfixing.md`).
 
+## Monitoring planes (production — see `observability.md`)
+Every production agent runs under two-plane supervision feeding CxHub:
+- **Plane A — agent observability:** PAF 26.4 emits OTEL traces/spans (run, step,
+  tool call, LLM call) → OTEL collector → tracing backend (Phoenix/Langfuse/Opik)
+  + a metadata-only digest into OCI Logging Analytics. The differentiator.
+- **Plane B — platform availability:** synthetic probes + resource collectors
+  watch PAF and every dependency (host, DB 26ai, model endpoint, MCP, egress,
+  tracing backend, credentials) from PAF's vantage point. Table stakes.
+
+The full estate picture: `… EBS 19c XX… PL/SQL` (data path) **plus** `PAF → OTEL
+collector → backend + CxHub` (Plane A) **plus** `probes → OCI Monitoring/Logging
+Analytics → CxHub` (Plane B). Deliverable architecture diagrams should show both
+planes when monitoring is in scope (`spec.observability`).
+
 ## Key design choices (carry into every agent)
 - DI of repository + extractor → identical pipeline runs on mock (hermetic) or
   live EBS by swapping one constructor arg.

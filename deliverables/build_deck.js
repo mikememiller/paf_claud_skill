@@ -1,9 +1,11 @@
 /*
  * Syntax Corporation (c) 2026 — PAF Agent Factory
  * build_deck.js — wow-graphics "Deliverables Catalog" deck (pptxgenjs).
- * v1.0.0 / 2026.06.08.  Run AFTER build_diagram.js.
+ * v1.1.0 / 2026.06.13.  Run AFTER build_diagram.js.
  *   node build_diagram.js && node build_deck.js   (needs pptxgenjs + sharp)
  *   -> PAF_Factory_Deliverables.pptx
+ *   (v1.1.0 adds the two-plane monitoring/"adult supervision" slide and the
+ *    Monitoring & observability TDD to the customer-facing catalog.)
  */
 const pptxgen = require("pptxgenjs");
 const path = require("path");
@@ -79,6 +81,7 @@ const cust = [
   ["OCI BOM + estimator", ".xlsx", GREEN, "Sized line items (ADB/PAF, managed MCP, GenAI) + consumption flex."],
   ["ROI calculator", ".html", GOLD, "Interactive payback / NPV; 'use my data' mode. Same pricing inputs."],
   ["PAF integration pkg", ".paf", NAVY_DK, "Importable bundle (password simple4u) + MCP tool defs + canvas recipe."],
+  ["Monitoring & obs TDD", ".docx", NAVY, "Two-plane supervision design (Plane A traces + Plane B availability) + CxHub data contract. Per-tenancy."],
 ];
 const cw = 2.95, ch = 2.45, gx = 0.18, x0 = 0.5;
 cust.forEach((c, i) => {
@@ -104,7 +107,41 @@ eng.forEach((c, i) => {
 });
 footer(s, 4);
 
-// --- 5. Built right --------------------------------------------------------
+// --- 5. Adult supervision — monitoring & observability ---------------------
+s = pptx.addSlide();
+header(s, "Adult supervision",
+        "Two-plane monitoring — platform availability + agent observability, one pane");
+const planes = [
+  [CYAN, "Plane A · Agent observability", "The differentiator", [
+    "Every run traced — step, tool call, LLM call; latency and cost attributed per run, agent and time window",
+    "Tool-call success rate flags a degraded MCP server or ERP backend before users feel it",
+    "Automated evaluators score groundedness and tool-call validity — quality without storing payloads",
+  ]],
+  [GREEN, "Plane B · Platform availability", "Table stakes", [
+    "Synthetic probes replicate every PAF connection — DB 26ai, model endpoint, MCP, egress",
+    "Credential-expiry calendar and config-drift watch catch silent outages before they fire",
+    "SLA-backed: PAF/UI 99.5%, DB reachability 99.9%, MCP tool-call success ≥ 98%",
+  ]],
+];
+planes.forEach((p, i) => {
+  const x = 0.5 + i * (6.0 + 0.33);
+  s.addShape("roundRect", { x, y: 1.35, w: 6.0, h: 3.55, rectRadius: 0.1, fill: { color: MIST }, line: { color: LINE, width: 1 } });
+  s.addShape("rect", { x, y: 1.35, w: 6.0, h: 0.16, fill: { color: p[0] }, line: { type: "none" } });
+  s.addText(p[1], { x: x + 0.28, y: 1.62, w: 5.4, h: 0.45, fontFace: HEAD, fontSize: 18, bold: true, color: INK });
+  s.addText(p[2].toUpperCase(), { x: x + 0.28, y: 2.06, w: 5.4, h: 0.3, fontFace: BODY, fontSize: 11, bold: true, color: p[0], charSpacing: 2 });
+  s.addText(p[3].map(t => ({ text: t, options: { bullet: { code: "2022", indent: 14 }, breakLine: true, paraSpaceAfter: 8 } })),
+    { x: x + 0.28, y: 2.5, w: 5.45, h: 2.25, fontFace: BODY, fontSize: 12, color: SLATE, valign: "top" });
+});
+s.addShape("roundRect", { x: 0.5, y: 5.15, w: 12.33, h: 0.85, rectRadius: 0.08, fill: { color: NAVY_DK }, line: { type: "none" } });
+s.addText([
+  { text: "Ships as:  ", options: { bold: true, color: CYAN } },
+  { text: "Monitoring & observability TDD (.docx)   ·   CxHub data contract (.json)   ·   Plane B probe set   ·   per-agent OAuth audit chain", options: { color: PAPER } },
+], { x: 0.8, y: 5.15, w: 11.7, h: 0.85, fontFace: BODY, fontSize: 13, valign: "middle" });
+s.addText("Generation is the giveaway; supervision is the product — the recurring value the foundation fee funds.",
+  { x: 0.5, y: 6.15, w: 12.33, h: 0.4, fontFace: BODY, fontSize: 13, italic: true, color: NAVY });
+footer(s, 5);
+
+// --- 6. Built right --------------------------------------------------------
 s = pptx.addSlide();
 header(s, "Built right", "Why the deliverables are trustworthy");
 const pillars = [
@@ -120,9 +157,9 @@ pillars.forEach((p, i) => {
   s.addText(p[0], { x: x + 0.25, y: 2.85, w: 3.6, h: 0.7, fontFace: HEAD, fontSize: 18, bold: true, color: INK });
   s.addText(p[2], { x: x + 0.25, y: 3.6, w: 3.55, h: 2.3, fontFace: BODY, fontSize: 13, color: SLATE, valign: "top" });
 });
-footer(s, 5);
+footer(s, 6);
 
-// --- 6. Where created ------------------------------------------------------
+// --- 7. Where created ------------------------------------------------------
 s = pptx.addSlide();
 header(s, "Where deliverables are created", "Reusable catalog + per-engagement artifacts");
 s.addShape("roundRect", { x: 0.5, y: 1.5, w: 6.0, h: 4.4, rectRadius: 0.1, fill: { color: MIST }, line: { color: LINE, width: 1 } });
@@ -144,9 +181,9 @@ s.addText([
   { text: "slides/ — the deck + hero-diagram generators", options: { fontSize: 12, color: SLATE, bullet: true, breakLine: true } },
   { text: "e.g. EBS-Contract-Renewal-PAF (the EBS AP agent)", options: { fontSize: 12, color: SLATE, italic: true, bullet: true } },
 ], { x: 7.05, y: 2.5, w: 5.5, h: 3.2, fontFace: BODY, valign: "top" });
-footer(s, 6);
+footer(s, 7);
 
-// --- 7. Closing ------------------------------------------------------------
+// --- 8. Closing ------------------------------------------------------------
 s = pptx.addSlide();
 s.background = { color: NAVY_DK };
 triBar(s, 0.9, 2.4, 0.6, 0.16);

@@ -24,6 +24,29 @@ signature-ready 3-term table in the SOW; same numbers flow to deck + ROI.
 - **OCI Document Understanding (OCR)** — per-page, optional (per-domain ingestion).
 - Storage + networking. (No broker VM, no Instant Client host in production.)
 
+### Monitoring & observability lines (when `spec.observability` is set — `observability.md`)
+- **Tracing backend — software:** $0 (self-hosted OSS core: Phoenix / Langfuse /
+  Opik).
+- **Tracing backend — infrastructure:** compute + storage; ClickHouse is the
+  dominant driver for Langfuse. Scales with trace volume × spans/run × payload
+  size × masking state (~10:1 compression typical; masked is materially smaller
+  than unmasked).
+- **OTEL collector:** estate-shared — negligible per-customer share.
+- **OCI Logging Analytics:** per-GB ingest — includes the EBS Unified Audit
+  volume from the MCP audit chain. The per-GB ingest is the explicit trade that
+  buys down operator labor (the dominant recurring cost).
+- **OCI Streaming:** the CxHub transport (render-only feed).
+- **OCI Functions:** invocations behind the OCI→ServiceNow material-events path.
+- **Plane B probes:** mostly OCI-native (Monitoring / Health Checks) — low
+  marginal infra.
+- **Operator labour:** the real recurring cost — the supervision headcount the
+  foundation fee funds. Scales with estate size and SLA tier.
+
+> All monitoring figures are **planning estimates** (TDD discipline) — confirm by
+> measured ingest volume and live tenancy sizing before any commercial use.
+> Self-host is cost-effective at scale or where sovereignty is mandatory; managed
+> cloud tiers can be cheaper once operational overhead is included.
+
 ## Consumption estimator (.xlsx, anthropic-skills:xlsx)
 Per-transaction unit economics (OCR pages + LLM in/out tokens + ECPU + storage) ×
 the `volume_tiers`, toggles for **BYOL vs License Included**, model choice, OCR

@@ -1,5 +1,5 @@
 {
-  "_comment": "Syntax Corporation © 2026 — EBS PAF Agent skill v2.0.0 (2026.06.11). OPTIONAL settings-level hook wiring. The PRIMARY wiring is the SKILL.md frontmatter; enable exactly ONE of the two or every gate fires twice. To use this instead: merge the 'hooks' object into <project>/.claude/settings.json after scaffold_enforcement.py has installed .claude/paf-hooks/.",
+  "_comment": "Syntax Corporation © 2026 — EBS PAF Agent skill v2.1.0 (2026.06.13). CANONICAL Claude Code hook wiring (SKILL.md frontmatter no longer carries hooks, so the skill validates for claude.ai / Cowork / Skills API upload). To enable enforcement in Claude Code: run scaffold_enforcement.py to install .claude/paf-hooks/, then merge this 'hooks' object into <project>/.claude/settings.json. On claude.ai / Cowork no hooks fire — the gates are binding procedurally.",
   "hooks": {
     "SessionStart": [
       { "hooks": [ { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/paf-hooks/session_context.py" } ] }

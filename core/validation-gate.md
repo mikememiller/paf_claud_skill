@@ -84,6 +84,29 @@ the rest — that is the line that makes this sellable.
 
 ---
 
+## Observability validation checklist (run after rebind, before ship)
+
+Importing and passing the correctness gate is not "monitored." A validated agent
+in production must also be observable. Run this checklist per agent, per customer
+environment (full design in `references/observability.md`):
+
+| # | Check | Pass criterion |
+|---|-------|----------------|
+| O-1 | Tracing config present | PAF has one active tracing tool config pointing at the **OTEL collector** (not a backend directly). *Admin confirms — not the builder if viewer-only.* |
+| O-2 | Backend reachable | Proxy allow-list permits the backend URL; "Allow User Supplied Proxy" set as required. |
+| O-3 | Masking posture set | Masking ON unless unmasked is authorized; the choice is **recorded in the customer data-handling profile**. |
+| O-4 | Per-agent OAuth client | This agent (family) has its **own** confidential OAuth application — **never** a shared "PAF" client. Verify the audited principal resolves to this agent's client name. |
+| O-5 | Trace emitted end-to-end | At least one test run produces a trace **visible in the backend UI** (run → steps → tool calls → LLM calls). |
+| O-6 | MCP audit chain joins | `InvokeMcpServer` event in OCI Audit + Unified Audit row (after `AUDIT CONTEXT NAMESPACE CLIENTCONTEXT`) correlate on `opc-request-id` (or documented time-window fallback). |
+| O-7 | Plane B probes defined | Probe set for this customer's dependency inventory exists (host, DB 26ai, model endpoint, MCP liveness + tool-call success, egress, tracing backend, credentials, config drift). |
+| O-8 | Credential calendar | Every binding (DB wallet, MCP auth, LLM key, tracing key) has an expiry-calendar entry with ≥14-day lead time. |
+
+**Observability gate = PASS** only if O-1, O-3, O-4, and O-5 are all green — those
+four are the difference between "shipped" and "supervised," and O-4 is what keeps
+the audit chain attributable per agent across the whole slate.
+
+---
+
 ## What this gives us
 
 - A **repeatable, evidence-backed** claim: "validated against N ground-truth cases, zero

@@ -1,4 +1,4 @@
-<!-- Syntax Corporation © 2026 — paf_claud_skill · README.md · v2.0.0 · 2026-06-11 -->
+<!-- Syntax Corporation © 2026 — paf_claud_skill · README.md · v2.1.0 · 2026-06-13 -->
 # PAF Agent Factory — a Claude skill
 
 Build an **Oracle Private Agent Factory (PAF 26.4)** agent end-to-end:
@@ -27,7 +27,7 @@ v2 adds an **enforcement layer** (see `UPGRADE-2.0.md` + `references/orchestrati
 | `scripts/build_state.py` + `converged.py` | Phase 6 convergence as a state machine — 2 consecutive clean QA rounds to ship; ceiling → `ESCALATION.md` |
 | `scripts/lint_paf.py` | artifact linter locked to the verified 26.4 flowGraph schema (+ `.paf` decrypt check, spec keys, banners, the 25.3 version axis) |
 | `scripts/qa_pass.py` v2 | records every round; enforces the every-fix-adds-a-test rule; runs seeded `qa_checks/` (balancing, Python↔PL/SQL parity) |
-| `scripts/hooks/` + SKILL.md frontmatter | SessionStart context, Bash guards, lint-on-write, and a Stop gate that blocks "done" before convergence (Claude Code CLI) |
+| `scripts/hooks/` + `hooks/settings.fragment.json` | SessionStart context, Bash guards, lint-on-write, and a Stop gate that blocks "done" before convergence (Claude Code CLI; wire via the settings fragment) |
 | `agents/` | `paf-discovery`, `paf-validator`, `paf-deliverables` subagents — fresh-context separation of duties |
 | `scripts/scaffold_enforcement.py` | installs all of the above into each generated build repo (Phase 2) |
 | `scripts/selftest.py` | executable proof — 11 scenarios, no live EBS needed |
@@ -69,7 +69,8 @@ core/                     DOMAIN-NEUTRAL PAF kit
   scripts/                paf_packager.py · list_mcp_tools.py
   flowgraphs/             real, tool-bound, secret-free clone templates
 references/               EBS DOMAIN PACK (architecture, oracle-gotchas,
-                          paf-platform, interface-catalog, qa, pricing, branding…)
+                          paf-platform, interface-catalog, qa, pricing, branding,
+                          observability…)
 templates/                EBS reference engine (a working, tested EBS AP agent)
 deliverables/             DELIVERABLES.md + the wow-graphics showcase deck + generators
 assets/                   brand.json + logo (single brand source)

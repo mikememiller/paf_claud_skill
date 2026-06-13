@@ -13,28 +13,10 @@ description: >-
   Financials, HR/Payroll, Manufacturing, Supply Chain. Each build loops on QA
   until convergence — v2 ENFORCES the loop with a state machine, lifecycle
   hooks, and builder/validator subagents (see references/orchestration.md).
-hooks:
-  SessionStart:
-    - hooks:
-        - type: command
-          command: python3 .claude/paf-hooks/session_context.py
-  PreToolUse:
-    - matcher: Bash
-      hooks:
-        - type: command
-          command: python3 .claude/paf-hooks/bash_guard.py
-  PostToolUse:
-    - matcher: Write|Edit
-      hooks:
-        - type: command
-          command: python3 .claude/paf-hooks/post_write_lint.py
-  Stop:
-    - hooks:
-        - type: command
-          command: python3 .claude/paf-hooks/stop_gate.py
+compatibility: "Uploadable skill (claude.ai / Cowork / Skills API) and Claude Code. In Claude Code, wire the enforcement hooks via hooks/settings.fragment.json (the P2 scaffold installs .claude/paf-hooks/); on claude.ai/Cowork the gates are binding procedurally."
 ---
 
-<!-- Syntax Corporation © 2026 — EBS PAF Agent skill · SKILL.md · v2.0.0 · 2026.06.11 -->
+<!-- Syntax Corporation © 2026 — EBS PAF Agent skill · SKILL.md · v2.1.0 · 2026.06.13 -->
 # PAF Agent — build factory (v2: enforced)
 
 Produce a new Oracle **Private Agent Factory (26.4)** agent that is
@@ -45,10 +27,9 @@ procedure** — execute with the user in the loop; never a silent black box.
 **Two layers.** The **domain-neutral core** (`core/`, start at `core/README.md`)
 designs → packages → imports → validates ANY PAF agent (`paf-import.md`,
 `validation-gate.md`, `scripts/paf_packager.py`, `scripts/list_mcp_tools.py`,
-clone-able `flowgraphs/`). The **EBS domain pack** is `references/`
-(architecture, oracle-gotchas, connection, paf-platform, interface-catalog,
-qa-and-bugfixing, pricing-and-bom, branding, graphics-standard, deliverables,
-orchestration) + `templates/` (the shipped, fully tested EBS AP engine — reuse
+clone-able `flowgraphs/`). The **EBS domain pack** is `references/` (architecture, oracle-gotchas, connection,
+paf-platform, interface-catalog, qa-and-bugfixing, pricing-and-bom, branding,
+graphics-standard, deliverables, observability, orchestration) + `templates/` (the shipped, fully tested EBS AP engine — reuse
 it; change only the variable layer in `spec.yaml`, see `spec.example.yaml`).
 
 ## Architecture (every agent, same shape)
@@ -72,6 +53,13 @@ document → PAF extract (LLM node) → governed EBS tools → deterministic pol
   tool only if explicitly confirmed at install — a verify item).
 - **Python engine = reference + mock + test oracle + portable fallback**;
   production logic is the EBS PL/SQL package — keep them at parity (tested).
+- **Observability is native in 26.4** — PAF exports OTEL traces (run/step/tool/
+  LLM) to one backend (Phoenix/Langfuse/Opik via an OTEL collector). Every
+  production agent runs under the **two-plane** model — Plane A agent
+  observability (the moat) + Plane B platform availability (table stakes) — with
+  masking **on** by default and **one OAuth client per agent** for the audit
+  chain. Design + per-agent gate live in `references/observability.md` and the
+  observability checklist in `core/validation-gate.md`.
 
 ## Phases (owner · gate — details in references/orchestration.md)
 
@@ -108,15 +96,18 @@ document → PAF extract (LLM node) → governed EBS tools → deterministic pol
 
 ## Enforcement (v2 — see references/orchestration.md)
 
-Hooks (frontmatter above; scripts installed by P2 scaffold): **SessionStart**
+Hooks (wired via `hooks/settings.fragment.json`; scripts installed by P2
+scaffold): **SessionStart**
 injects environment ground truth · **PreToolUse(Bash)** blocks `num_rows`
 stats reads and EBS base-table DDL · **PostToolUse(Write|Edit)** lints
 `.flowgraph.json`/`.paf`/`spec.yaml`/banners on write · **Stop** blocks "done"
 until `converged.py` exits 0 (ceiling → `ESCALATION.md`, stop allowed).
-Settings-level alternative: `hooks/settings.fragment.json` — enable exactly
-ONE wiring. **Cowork / claude.ai (no hooks): the gates are binding
-procedurally** — run `qa_pass.py` then `converged.py --report` before claiming
-done; lint every artifact after writing it.
+In Claude Code, merge `hooks/settings.fragment.json` into
+`<project>/.claude/settings.json` after the P2 scaffold installs
+`.claude/paf-hooks/` (the scaffold can also write the wiring). **Cowork /
+claude.ai (no hooks): the gates are binding procedurally** — run `qa_pass.py`
+then `converged.py --report` before claiming done; lint every artifact after
+writing it.
 
 ## Rules (non-negotiable)
 

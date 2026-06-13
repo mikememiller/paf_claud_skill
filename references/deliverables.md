@@ -17,13 +17,15 @@ in [`../deliverables/samples/`](../deliverables/samples/).
 |---|-------------|--------|-------------------|
 | 0a | Technical-architecture diagram | `.png` | `build_diagrams.js --kind architecture` |
 | 0b | Functional-flow diagram | `.png` | `build_diagrams.js --kind flow` |
-| 1 | Sales deck | `.pptx` | `build_sales_deck.js` (pptxgenjs) — embeds the architecture diagram |
+| 1 | Sales deck | `.pptx` | `build_sales_deck.js` (pptxgenjs) — embeds the architecture diagram; optional **monitoring slide** (two-plane "adult supervision") renders when `spec.monitoring` is set |
 | 2 | Installation guide | `.docx` | `build_docx.py` (stdlib OOXML, no deps) |
 | 3 | Technical design doc | `.docx` | `build_docx.py` — embeds the architecture diagram |
 | 4 | Statement of Work (comprehensive, signable) | `.docx` | `build_docx.py` — problem · solution · value · BOTH diagrams · governance · timeline · RACI · SLAs · entitlements · pricing · OCI BOM · signature; generic legal shell |
 | 5 | OCI BOM + consumption estimator | `.xlsx` | `build_oci_bom_xlsx.py` (openpyxl) |
 | 6 | Interactive ROI calculator | `.html` (+ `.xlsx`) | roadmap — author per build; pricing from `pricing.json` |
 | 7 | PAF integration package | `.paf` + sql/md/json | `core/scripts/paf_packager.py` + managed-MCP tool defs + canvas recipe (`paf-platform.md`) |
+| 8 | Monitoring & observability TDD | `.docx` | per-tenancy instance of the two-plane design (`observability.md`); include when `spec.observability` is set |
+| 9 | CxHub data contract | `.json` / `.md` | versioned stream schema — OpenInference span-attribute subset + per-customer routing tags (`observability.md`); the hand-off to whoever deploys CxHub |
 | – | Pricing model | `.json` | `pricing.py` (one model → all docs match) |
 
 Also in-repo: `docs/*.md`, `INSTALL.md`/`setup.sh`, the EBS `XX…` PL/SQL package,
